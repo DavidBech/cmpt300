@@ -2,6 +2,7 @@
 PROGNAME := a.out
 
 RM := rm -f
+COMP_FLAGS := -Wall -Werror -g
 
 SRC_FILES = $(wildcard ./*.c)
 
@@ -15,7 +16,7 @@ $(PROGNAME): $(OBJ_FILES)
 	gcc -o $@ $^
 
 $(OBJ_FILES): %.o : %.c
-	gcc -c $< -o $@
+	gcc $(COMP_FLAGS) -c $< -o $@
 
 clean: 
 	$(RM) $(PROGNAME)
@@ -23,3 +24,6 @@ clean:
 
 run: all
 	./$(PROGNAME)
+
+valgrind: all
+	valgrind ./$(PROGNAME)
