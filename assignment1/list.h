@@ -12,15 +12,22 @@
 typedef struct Node_s Node;
 struct Node_s {
     // TODO: You should change this
+    void* item;
+    unsigned char next;
+    unsigned char prev;
 };
 
 enum ListOutOfBounds {
     LIST_OOB_START,
     LIST_OOB_END
 };
+
 typedef struct List_s List;
 struct List_s{
     // TODO: You should change this!
+    unsigned char start;
+    unsigned char end;
+    unsigned char size;
 };
 
 // Maximum number of unique lists the system can support
@@ -117,6 +124,7 @@ void* List_trim(List* pList);
 // 
 // If the current pointer is before the start of the pList, then start searching from
 // the first node in the list (if any).
+
 typedef bool (*COMPARATOR_FN)(void* pItem, void* pComparisonArg);
 void* List_search(List* pList, COMPARATOR_FN pComparator, void* pComparisonArg);
 
