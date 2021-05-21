@@ -1,0 +1,113 @@
+Lists:
+ - Multiple Heads
+ - Multiple Heads w/ Deletions
+ - Out of heads
+
+List Count:
+ - Checked periodically in other tests
+
+List first:
+ - Empty List
+ - List OOB Start
+ - List OOB End
+ - List at first
+ - List at middle
+
+List last:
+ - Empty List
+ - List OOB Start
+ - List OOB End
+ - List at last
+ - List at middle
+
+List next:
+ - Empty List
+ - List OOB Start
+ - List OOB End
+ - List at last
+ - List at middle
+
+List prev:
+ - Empty List
+ - List OOB Start
+ - List OOB End
+ - List at first
+ - List at middle
+
+List cur:
+ - Empty List
+ - List OOB Start
+ - List OOB end
+ - List at middle
+
+List add:
+ - Empty List
+ - List OOB Start
+ - List OOB end
+ - List at last 
+ - List at middle
+ - Out of nodes
+
+List insert:
+ - Empty List
+ - List OOB Start
+ - List OOB end
+ - List at first
+ - List at middle
+ - Out of nodes
+
+List append:
+ - Empty List
+ - List OOB Start
+ - List OOB end
+ - List at last
+ - List at middle
+ - Out of nodes
+
+List prepend:
+ - Empty List
+ - List OOB Start
+ - List OOB end
+ - List at first
+ - List at middle
+ - Out of nodes
+
+List remove:
+ - Empty List
+ - List OOB Start
+ - List OOB end
+ - List at first
+ - List at last 
+ - List at middle
+
+List concat:
+ - Empty List x1
+ - Empty List x2
+ - List OOB Start
+ - List OOB End
+ - Use pList2 after its removal
+ - List at first
+ - List at last
+ - List at middle
+
+List free:
+ - Empty List
+ - Valid List
+ - Use nodes/head after deletion
+
+List trim:
+ - Empty List
+ - List at last
+ - List at middle
+
+List search:
+ - Empty List
+ - Item not in list
+ - Item in list after cur
+ - Item in list at cur
+ - Item in list before cur
+ - cur OOB start
+ - cur OOB end
+
+
+
