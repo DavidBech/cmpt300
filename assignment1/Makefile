@@ -1,4 +1,4 @@
-.PHONY: all, clean
+.PHONY: all, clean, run, valgrind
 PROGNAME := a.out
 
 RM := rm -f
