@@ -401,24 +401,98 @@ static void List_add_OOB_end(List* pList, void* pItem){
 
 void* List_remove(List* pList){
     assert(pList != NULL);
-    // TODO
-    assert(false);
+    if(pList->boundCheck == LIST_IN_BOUNDS){
+        // before:                      after:
+        //      Nd0 -> Nd1 -> Nd2           Nd0 -> Nd2
+        //              |                           |
+        //             cur                         cur
+        // Note: cur may potentially be NULL after this operation
+        assert(pList->curNode != NULL);
+        Node* Node0 = pList->curNode->prev;
+        Node* Node1 = pList->curNode;
+        Node* Node2 = pList->curNode->next;
+        void* pItem = pList->curNode->item;
+        
+        // Update Pointers
+        if(Node0 != NULL && Node2 != NULL){
+            Node0->next = Node2;
+            Node2->prev = Node0;
+        } else if(Node0 != NULL) { 
+            // Node2 == NULL
+            Node0->next = NULL;
+            pList->lastNode = Node0;
+            pList->boundCheck = LIST_OOB_END;
+        } else if(Node2 != NULL){
+            // Node0 == NULL
+            Node2->prev = NULL;
+            pList->firstNode = Node2;
+        } else {
+            // Node2 && Node0 == NULL
+            pList->lastNode = NULL;
+            pList->firstNode = NULL;
+            pList->boundCheck = LIST_EMPTY;
+            assert(pList->size == 1);
+        }
+
+        // Add Node1 Back into the pool of nodes
+        Node1->prev = NULL;
+        Node1->item = NULL;
+        Node1->next = List_next_node;
+        List_next_node = Node1;
+
+        // Update Remaining Fields
+        pList->curNode = Node2;
+        --(pList->size);
+        return pItem;
+    }
+
+    // Either empty or out of bounds
     return NULL;
 }
 
 void* List_trim(List* pList){
     assert(pList != NULL);
-    // TODO
-    assert(false);
+    // TODO if statement incorrect
+    if(pList->boundCheck != LIST_EMPTY){
+        // before:              after:
+        //      Nd0 -> Nd1          Nd0
+        //              |            |
+        //             lst        cur/lst
+        assert(pList->lastNode != NULL);
+        Node* Node0 = pList->lastNode->prev;
+        Node* Node1 = pList->lastNode;
+        void* pItem = pList->lastNode->item;
+
+        // Remove node from list and add to pool
+        Node1->prev = NULL;
+        Node1->item = NULL;
+        Node1->next = List_next_node;
+        List_next_node = Node1;
+        
+        if(Node0 != NULL){
+            Node0->next = NULL;
+            pList->boundCheck = LIST_IN_BOUNDS;
+        } else {
+            // Node1 is the only node in the list
+            pList->firstNode = NULL;            
+            pList->boundCheck = LIST_EMPTY;
+        }
+        pList->curNode = Node0;
+        pList->lastNode = Node0;
+        --(pList->size);
+        return pItem;
+    }
+    // Empty list return null
     return NULL;
 }
 
 /* Functions Other */
 
 void List_concat(List* pList1, List* pList2){
-    assert(pList1 != NULL);
-    assert(pList2 != NULL);
-    // TODO
+    assret(pList1 != NULL);
+    if(pList2 == NULL){
+        return;
+    }
     assert(false);
 }
 
