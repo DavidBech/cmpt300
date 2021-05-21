@@ -11,23 +11,24 @@
 
 typedef struct Node_s Node;
 struct Node_s {
-    // TODO: You should change this
     void* item;
-    unsigned char next;
-    unsigned char prev;
+    Node* next;
+    Node* prev;
 };
 
 enum ListOutOfBounds {
     LIST_OOB_START,
-    LIST_OOB_END
+    LIST_OOB_END,
+    LIST_IN_BOUNDS
 };
 
 typedef struct List_s List;
 struct List_s{
-    // TODO: You should change this!
-    unsigned char start;
-    unsigned char end;
-    unsigned char size;
+    int boundCheck;
+    int size;
+    Node* curNode;
+    Node* firstNode;
+    Node* lastNode;
 };
 
 // Maximum number of unique lists the system can support
