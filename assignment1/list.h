@@ -27,6 +27,7 @@ typedef struct List_s List;
 struct List_s{
     int boundCheck;
     int size;
+    int index;
     Node* curNode;
     Node* firstNode;
     Node* lastNode;
