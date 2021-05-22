@@ -32,16 +32,18 @@ static Node* List_next_node;
 
 static void List_initialize(){
     // Set up single linked indexes for List heads
-    for(int i=0; i<LIST_MAX_NUM_HEADS-2; ++i){
+    for(int i=0; i<LIST_MAX_NUM_HEADS; ++i){
         List_head_next_list[i].head = &List_headArray[i];
-        List_head_next_list[i].next = &List_head_next_list[i+1];
+        List_head_next_list[i].head->index = i;
+        if(i != LIST_MAX_NUM_HEADS-1){
+            List_head_next_list[i].next = &List_head_next_list[i+1];
+        }
     }
-    List_head_next_list[LIST_MAX_NUM_HEADS-1].head = &List_headArray[LIST_MAX_NUM_HEADS-1];
     List_head_next_list[LIST_MAX_NUM_HEADS-1].next = NULL;
     List_next_head = &List_head_next_list[0];
 
     // Set up single linked indexes for List Nodes
-    for(int i=0; i<LIST_MAX_NUM_NODES-2; ++i){
+    for(int i=0; i<LIST_MAX_NUM_NODES-1; ++i){
         List_nodeArray[i].next = &List_nodeArray[i+1];
     }
     List_nodeArray[LIST_MAX_NUM_NODES-1].next = NULL;
@@ -493,14 +495,29 @@ void List_concat(List* pList1, List* pList2){
     if(pList2 == NULL){
         return;
     }
+    // TODO
     assert(false);
 }
 
 void List_free(List* pList, FREE_FN pItemFreeFn){
     assert(pList != NULL);
     assert(pItemFreeFn != NULL);
-    // TODO
-    assert(false);
+    void* pItem;
+    while(pList->curNode != NULL){
+        pItem = List_trim(pList);
+        (*pItemFreeFn)(pItem);
+    }
+    assert(pList->firstNode == NULL);
+    assert(pList->lastNode == NULL);
+    assert(pList->curNode == NULL);
+    assert(pList->boundCheck == LIST_EMPTY);
+    assert(pList->size == 0);
+
+    List_adj* temp = &List_head_next_list[pList->index];
+    temp->head = pList;
+    temp->next = List_next_head;
+    List_next_head = temp;
+    pList = NULL;
 }
 
 void* List_search(List* pList, COMPARATOR_FN pComparator, void* pComparisonArg){
