@@ -489,7 +489,7 @@ void* List_trim(List* pList){
 /* Functions Other */
 
 void List_concat(List* pList1, List* pList2){
-    assret(pList1 != NULL);
+    assert(pList1 != NULL);
     if(pList2 == NULL){
         return;
     }
