@@ -3,50 +3,53 @@ Lists:
  - Multiple Heads w/ Deletions
  - Out of heads
 
+Nodes 
+ - All used over multiple Lists
+
 List Count:
  - Checked periodically in other tests
 
 List first:
- - Empty List
+ - Empty List - done
  - List OOB Start
  - List OOB End
  - List at first
  - List at middle
 
 List last:
- - Empty List
+ - Empty List - done
  - List OOB Start
  - List OOB End
  - List at last
  - List at middle
 
 List next:
- - Empty List
+ - Empty List - done
  - List OOB Start
  - List OOB End
  - List at last
  - List at middle
 
 List prev:
- - Empty List
+ - Empty List - done
  - List OOB Start
  - List OOB End
  - List at first
  - List at middle
 
 List cur:
- - Empty List
+ - Empty List - done
  - List OOB Start
  - List OOB end
  - List at middle
 
 List add:
- - Empty List
- - List OOB Start
- - List OOB end
- - List at last 
- - List at middle
- - Out of nodes
+ - Empty List - Done
+ - List OOB Start - Done
+ - List OOB end - Done
+ - List at last - Done
+ - List at middle - Done
+ - Out of nodes - Done
 
 List insert:
  - Empty List
