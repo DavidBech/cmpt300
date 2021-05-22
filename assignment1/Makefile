@@ -26,4 +26,4 @@ run: all
 	./$(PROGNAME)
 
 valgrind: all
-	valgrind ./$(PROGNAME)
+	valgrind --leak-check=full --show-leak-kinds=all -s ./$(PROGNAME)
