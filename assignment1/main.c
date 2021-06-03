@@ -4,40 +4,36 @@
 
 #include "list.h"
 
-#define TEST_FAIL(line) fprintf(stderr, "Fail: at line %d\n", line);
-
+#define TEST_FAIL(line) fprintf(stderr, "Fail: at line %d\n", line)
+#define FAILURE status = 1; TEST_FAIL(__LINE__);
 /* Test File For list.c */
 
 /* Helper Functions */
-
 int* int_malloc();
 void print_test_status(const char* name, int status);
 void int_free(void* pInt);
+int run_test(int testfunc(List**), int numLists);
+bool compareInt(void*, void*);
 
 /* Tests */
-
-int test_empty_list(List* pList);
-int test_list_add_0(List* pList);
-int test_list_add_1(List* pList);
+int test_empty_list(List*);
+int test_list_add(List**);
+int test_list_insert(List**);
+int test_list_append(List**);
+int test_list_prepend(List**);
+int test_traversal(List**);
+int test_compare(List**);
+int test_remove(List**);
 
 int main(){
     int failed_tests = 0;
-    
-    /* List Add Test Cases */
-    List* pList0 = List_create();
-    failed_tests += test_list_add_0(pList0);
-    List_free(pList0, int_free);
-    pList0 = List_create();
-    failed_tests += test_empty_list(pList0);
-    failed_tests += test_list_add_1(pList0);
-    List_free(pList0, int_free);
-    failed_tests += test_list_add_1(pList0);
-    List_free(pList0, int_free);
-
-
-    /* TODO more test cases */
-    //pList0 = List_create();
-
+    failed_tests += run_test(test_remove, 1);
+    failed_tests += run_test(test_list_add, 1);
+    failed_tests += run_test(test_list_insert, 2);
+    failed_tests += run_test(test_list_append, 1);
+    failed_tests += run_test(test_list_prepend, 1);
+    failed_tests += run_test(test_traversal, 1);
+    failed_tests += run_test(test_compare, 1);
     printf("failed_tests: %d\n", failed_tests);
     return failed_tests > 0 ? 1 : 0;
 }
@@ -58,38 +54,54 @@ void print_test_status(const char* name, int status){
     }
 }
 
-int test_empty_list(List* pList){
+int run_test(int test(List**), int numLists){
+    List* pList_a[numLists];
     int status = 0;
-    if(List_count(pList) != 0){
-        status = 1;
-        TEST_FAIL(__LINE__)
-    } 
-    if(List_curr(pList) != NULL){
-        status = 1;
-        TEST_FAIL(__LINE__)
+    for(int i=0; i<numLists; ++i){
+        pList_a[i] = List_create();
+        status += test_empty_list(pList_a[i]);
     }
-    if(List_first(pList)!= NULL){
-        status = 1;
-        TEST_FAIL(__LINE__)
+    status = test(pList_a);
+    for(int i=0; i<numLists; ++i){
+        List_free(pList_a[i], int_free);
     }
-    if(List_last(pList) != NULL){
-        status = 1;
-        TEST_FAIL(__LINE__)
-    }
-    if(List_prev(pList)){
-        status = 1;
-        TEST_FAIL(__LINE__)
-    }
-    if(List_next(pList)){
-        status = 1;
-        TEST_FAIL(__LINE__)
-    }
-    print_test_status(__func__, status);
     return status;
 }
 
-int test_list_add_0(List* pList){
-    assert(pList != NULL);
+bool compareInt(void* listIn, void* compareIn){
+    return *(int*)listIn == *(int*)compareIn;
+}
+
+/* Start of Tests */
+
+int test_empty_list(List* pList){
+    int status = 0;
+    if(List_count(pList) != 0){
+        FAILURE
+    } 
+    if(List_curr(pList) != NULL){
+        FAILURE
+    }
+    if(List_first(pList)!= NULL){
+        FAILURE
+    }
+    if(List_last(pList) != NULL){
+        FAILURE
+    }
+    if(List_prev(pList)){
+        FAILURE
+    }
+    if(List_next(pList)){
+        FAILURE
+    }
+    if(status){
+        printf("%s: Failed\n", __func__);
+    }
+    return status;
+}
+
+int test_list_add(List** ppList){
+    List* pList = *ppList;
     int status = 0;
     int* x;
     int temp;
@@ -100,8 +112,7 @@ int test_list_add_0(List* pList){
             || List_last(pList) == NULL 
             || List_curr(pList) == NULL 
             || List_count(pList) != 1){
-        status = 1;
-        TEST_FAIL(__LINE__)
+        FAILURE
     }
 
     x = int_malloc();
@@ -117,8 +128,7 @@ int test_list_add_0(List* pList){
         *(int *)List_last(pList) != 3 ||
         temp != 2
         ){
-        status = 1;
-        TEST_FAIL(__LINE__)
+        FAILURE
     }
     List_prev(pList);
     x = int_malloc();
@@ -138,8 +148,7 @@ int test_list_add_0(List* pList){
         *(int *)List_last(pList) != 3 ||
         temp != 6
         ){
-        status = 1;
-        TEST_FAIL(__LINE__)
+        FAILURE
     }
     
     List_first(pList);
@@ -152,8 +161,7 @@ int test_list_add_0(List* pList){
     
     if(*(int *)List_first(pList) != 7 ||
         List_count(pList) != 7){
-        status = 1;
-        TEST_FAIL(__LINE__)
+        FAILURE
     }
     
     List_last(pList);
@@ -164,36 +172,452 @@ int test_list_add_0(List* pList){
 
     if(*(int *)List_last(pList) != 8 ||
         List_count(pList) != 8){
-        status = 1;
-        TEST_FAIL(__LINE__)
+        FAILURE
     }
-
-    print_test_status(__func__, status);
-    return status;
-}
-
-int test_list_add_1(List* pList){
-    int status = 0;
-    int* x;
+    List_free(pList, int_free);
+    pList = List_create();
     for(int i=0; i<LIST_MAX_NUM_NODES; ++i){
         x=int_malloc();
         *x=i;
         if(List_add(pList, x) == LIST_FAIL){
-            status = 1;
-            TEST_FAIL(__LINE__)  
+            FAILURE
         }
     }
     x=int_malloc();
     *x=LIST_MAX_NUM_NODES+1;
     if(List_add(pList, x) == LIST_SUCCESS){
-        status = 1;
-        TEST_FAIL(__LINE__)
+        FAILURE
     }
     int_free(x);
     if(List_count(pList) != LIST_MAX_NUM_NODES){
-        status = 1;
-        TEST_FAIL(__LINE__)
+        FAILURE
+    }
+    print_test_status(__func__, status);
+    return status;
+
+    print_test_status(__func__, status);
+    return status;
+}
+
+int test_list_insert(List** ppList){
+    List* pList0 = ppList[0];
+    List* pList1 = ppList[1];
+    int status = 0;
+    int* x;
+    int expected[] ={42, 14, 17, 18, 20};
+    for(int i=0; i<LIST_MAX_NUM_NODES/2; ++i){
+        x = int_malloc();
+        *x = i;    
+        if(List_insert(pList0, x)){
+            FAILURE
+        }
+        x = int_malloc();
+        *x = LIST_MAX_NUM_NODES/2 - i;    
+        if(List_insert(pList1, x)){
+            FAILURE
+        }
+    }
+    if(*(int *)List_curr(pList0) != LIST_MAX_NUM_NODES/2 -1){
+        FAILURE
+    }
+    
+    if(*(int *)List_curr(pList1) != 1){
+        FAILURE
+    }
+
+    x = int_malloc();
+    *x = 0xDEADBEEF;
+    if(List_insert(pList0, x) == LIST_SUCCESS){
+        FAILURE
+    }
+    if(List_insert(pList1, x) == LIST_SUCCESS){
+        FAILURE
+    }
+    int_free(x);
+
+    for(int i=1; i<LIST_MAX_NUM_NODES/2 -1; ++i){
+        if(*(int *)List_next(pList0) != LIST_MAX_NUM_NODES/2 - (i+1)){
+            FAILURE
+        }
+        if(*(int *)List_next(pList1) != (i+1)){
+            FAILURE
+        }
+    }
+    
+    List_free(pList1, int_free);
+    List_free(pList0, int_free);
+    pList0 = List_create();
+
+    x = int_malloc();
+    *x = 14;
+    List_append(pList0, x);
+    x = int_malloc();
+    *x = 18;
+    List_append(pList0, x);
+    
+    List_last(pList0);
+    x = int_malloc();
+    *x = 17;
+    if(List_insert(pList0, x) == LIST_FAIL){
+        FAILURE
+    }
+    List_last(pList0);
+    List_next(pList0);
+    x = int_malloc();
+    *x = 20;
+    if(List_insert(pList0,x) == LIST_FAIL){
+        FAILURE
+    }
+    if(*(int *)List_curr(pList0) != 20){
+        FAILURE
+    }
+    if(*(int *)List_last(pList0) != 20){
+        FAILURE
+    }
+    List_first(pList0);
+    List_prev(pList0);
+    x = int_malloc();
+    *x = 42;
+    if(List_insert(pList0,x) == LIST_FAIL){
+        FAILURE
+    }
+
+    if(*(int *)List_curr(pList0) != 42){
+        FAILURE      
+    }
+    if(*(int *)List_first(pList0) != 42){
+        FAILURE
+    }
+
+    x = int_malloc();
+    *x = 20;
+    if(List_insert(pList0, x) == LIST_FAIL){
+        FAILURE
+    } 
+    if(*(int *)List_curr(pList0) != 20){
+        FAILURE       
+    }
+    if(*(int *)List_first(pList0) != 20){
+        FAILURE
+    }
+    int temp;
+    int cntr = 0;
+    while(List_next(pList0)){
+        temp = *(int*)List_curr(pList0);
+        if(temp != expected[cntr]){
+            FAILURE
+        }
+        ++cntr;
+    }
+    if(pList0->size != 6){
+        FAILURE
     }
     print_test_status(__func__, status);
     return status;
 }
+
+int test_list_append(List** ppList){
+    int status = 0;
+    List* pList = *ppList;
+    int* x;
+    int expected[] = {17, 20, 78, 42, 86, 90, 93};
+    for(int i=0; i<LIST_MAX_NUM_NODES; ++i){
+        x = int_malloc();
+        *x = i;
+        if(List_append(pList, x) == LIST_FAIL){
+            FAILURE
+        }
+    }
+    x = int_malloc();
+    *x = 0xdeadbeef;
+    if(List_append(pList, x) == LIST_SUCCESS){
+        FAILURE
+    }
+    
+    List_free(pList, int_free);
+
+    *x = 17;
+    List_add(pList, x);
+
+    x = int_malloc();
+    *x = 20;
+    List_add(pList, x);
+
+    x = int_malloc();
+    *x = 78;
+    List_add(pList, x);
+
+    List_first(pList);
+    List_prev(pList);
+
+    x = int_malloc();
+    *x = 42;
+    if(List_append(pList, x) == LIST_FAIL){
+        FAILURE
+    }
+    
+    List_next(pList);
+    if(List_curr(pList) != NULL){
+        FAILURE
+    }
+    x = int_malloc();
+    *x = 86;
+    if(List_append(pList, x) == LIST_FAIL){
+        FAILURE
+    }
+    
+    List_last(pList);
+    x = int_malloc();
+    *x = 90;
+    if(List_append(pList, x) == LIST_FAIL){
+        FAILURE
+    }
+    List_first(pList);
+    List_next(pList);
+    x = int_malloc();
+    *x = 93;
+    if(List_append(pList, x) == LIST_FAIL){
+        FAILURE
+    }
+    List_first(pList);
+    int cnt = 0;
+    if(List_curr(pList) == NULL){
+        FAILURE
+    }
+    do{
+        if(*(int*)List_curr(pList) != expected[cnt]){
+            FAILURE
+        }
+        ++cnt;
+    } while(List_next(pList));
+
+    print_test_status(__func__, status);
+    return status;
+}
+
+int test_list_prepend(List** ppList){
+    int status = 0;
+    List* pList = *ppList;
+    int* x;
+
+    for(int i=0; i<LIST_MAX_NUM_NODES; ++i){
+        x = int_malloc();
+        *x = i;
+        List_prepend(pList, x);
+    }
+    x = int_malloc();
+    *x = 0xdeadbeef;
+    if(List_prepend(pList, x) == LIST_SUCCESS){
+        FAILURE
+    }
+    int_free(x);
+    List_first(pList);
+    for(int i=0; i<LIST_MAX_NUM_NODES; ++i){
+        if(*(int*)List_curr(pList)!= LIST_MAX_NUM_NODES - (i+1)){
+            FAILURE
+        }
+        List_next(pList);
+    }
+    List_free(pList, int_free);
+    pList = List_create();
+    x = int_malloc();
+    *x = 1;
+    List_add(pList, x);
+    x = int_malloc();
+    *x = 2;
+    List_add(pList, x);
+    x = int_malloc();
+    *x = 3;
+    List_add(pList, x);
+    List_prev(pList);
+    x = int_malloc();
+    *x = 5;
+    if(List_prepend(pList,x) == LIST_FAIL){
+        FAILURE
+    }
+    List_last(pList);
+    List_next(pList);
+    x = int_malloc();
+    *x = 6;
+    if(List_prepend(pList,x) == LIST_FAIL){
+        FAILURE
+    }
+    
+    List_next(pList);
+    x = int_malloc();
+    *x = 10;
+    if(List_prepend(pList,x) == LIST_FAIL){
+        FAILURE
+    }
+
+    int expected[] = {10,6,5,1,2,3};
+    List_first(pList);
+    int cnt = 0;
+    if(List_curr(pList) == NULL){
+        FAILURE
+    }
+    do{
+        if(*(int*)List_curr(pList) != expected[cnt]){
+            FAILURE
+        }
+        ++cnt;
+    } while(List_next(pList));
+    
+    print_test_status(__func__,status);
+    return status;
+}
+
+int test_traversal(List** ppList){
+    int status = 0;
+    List* pList = *ppList;
+    int* x;
+    // empty lists tests
+    if(List_first(pList)){
+        FAILURE
+    }
+
+    if(List_last(pList)){
+        FAILURE
+    }
+
+    if(List_next(pList)){
+        FAILURE
+    }
+    
+    if(List_last(pList)){
+        FAILURE
+    }
+
+    if(List_curr(pList)){
+        FAILURE
+    }
+
+    for(int i=0; i<10; ++i){
+        x = int_malloc();
+        *x = i;
+        List_append(pList, x);
+    }
+    /*first last next prev cur*/
+    /* first */
+    if(*(int*)List_first(pList) != 0){
+        FAILURE
+    }
+    List_prev(pList);
+    if(*(int*)List_first(pList) != 0){
+        FAILURE
+    }
+    List_last(pList);
+    List_next(pList);
+    if(*(int*)List_first(pList) != 0){
+        FAILURE
+    }
+
+    if(*(int*)List_last(pList) != 9){
+        FAILURE
+    }
+    List_next(pList);
+
+    if(*(int*)List_last(pList) != 9){
+        FAILURE
+    }
+    List_first(pList);
+    List_prev(pList);
+    if(*(int*)List_last(pList) != 9){
+        FAILURE
+    }
+    List_prev(pList);
+    List_prev(pList);
+    List_prev(pList);
+
+    if(*(int*)List_last(pList) != 9){
+        FAILURE
+    }
+    print_test_status(__func__, status);
+    return status;
+}
+
+int test_compare(List** ppList){
+    List* pList = *ppList;
+    int status = 0;
+    int *x;
+    int arrayInt[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,3};
+    for(int i=0; i<16; ++i){
+        x = malloc(sizeof(int));
+        *x = arrayInt[i];
+        List_append(pList, x);
+    }
+    List_first(pList);
+    void* item;
+    item = List_search(pList, compareInt, (void*)&arrayInt[15]);
+    if(item == NULL){
+        FAILURE
+    }
+    if(item != NULL && *(int*)item != 3){
+        FAILURE
+    }
+    if(List_curr(pList) == NULL){
+        FAILURE
+    }
+    if(*(int*)List_next(pList) != 4){
+        FAILURE   
+    }
+
+    item = List_search(pList, compareInt, (void*)&arrayInt[15]);
+    if(item == NULL){
+        FAILURE
+    }
+    if(item != NULL && *(int*)item != 3){
+        FAILURE
+    }
+    if(List_curr(pList) == NULL){
+        FAILURE
+    }
+    print_test_status(__func__, status);
+    return status;
+}
+
+int test_remove(List **ppList){
+    int status = 0;
+    List* pList = *ppList;
+    int* x;
+
+    for(int i=0; i<10; ++i){
+        x = int_malloc();
+        *x = i;
+        List_append(pList, x);
+    }
+
+    List_first(pList);
+    List_next(pList);
+    List_next(pList);
+    List_next(pList);
+    x = (int *)List_remove(pList);
+    if(*x != 3){
+        FAILURE
+    }
+    int_free(x);
+    if(*(int*)List_curr(pList) != 4){
+        FAILURE
+    }
+    if(List_count(pList) != 9){
+        FAILURE
+    }
+    List_first(pList);
+    List_prev(pList);
+    if(List_remove(pList) || List_count(pList) != 9){
+        FAILURE
+    }
+    
+    List_last(pList);
+    List_next(pList);
+    if(List_remove(pList) || List_count(pList) != 9){
+        FAILURE
+    }
+    print_test_status(__func__, status);
+    return status;
+}
+
+
+
+
+

@@ -11,10 +11,10 @@ List Count:
 
 List first:
  - Empty List - done
- - List OOB Start
- - List OOB End
- - List at first
- - List at middle
+ - List OOB Start - done
+ - List OOB End - done
+ - List at first - done
+ - List at middle - done
 
 List last:
  - Empty List - done
@@ -52,28 +52,28 @@ List add:
  - Out of nodes - Done
 
 List insert:
- - Empty List
- - List OOB Start
- - List OOB end
- - List at first
- - List at middle
- - Out of nodes
+ - Empty List - Done
+ - List OOB Start - Done
+ - List OOB end - Done
+ - List at first - Done
+ - List at middle - Done
+ - Out of nodes - Done
 
 List append:
- - Empty List
- - List OOB Start
- - List OOB end
- - List at last
- - List at middle
- - Out of nodes
+ - Empty List - Done
+ - List OOB Start - Done
+ - List OOB end - Done
+ - List at last - Done
+ - List at middle - Done
+ - Out of nodes - Done
 
 List prepend:
- - Empty List
- - List OOB Start
- - List OOB end
- - List at first
- - List at middle
- - Out of nodes
+ - Empty List - Done
+ - List OOB Start - Done
+ - List OOB end - Done
+ - List at first - Done
+ - List at middle - Done
+ - Out of nodes - Done
 
 List remove:
  - Empty List
