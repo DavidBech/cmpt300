@@ -25,12 +25,13 @@ enum ListOutOfBounds {
 
 typedef struct List_s List;
 struct List_s{
-    int boundCheck;
-    int size;
-    int index;
     Node* curNode;
     Node* firstNode;
     Node* lastNode;
+    List* nextHead;
+    unsigned short size;
+    unsigned char boundCheck;
+    bool inUse;
 };
 
 // Maximum number of unique lists the system can support

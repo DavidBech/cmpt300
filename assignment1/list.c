@@ -19,15 +19,7 @@ static bool List_initialized = false;
 
 /* List Head Variables */
 static List List_headArray[LIST_MAX_NUM_HEADS];
-
-// Stack to hold list heads
-typedef struct List_adj_t List_adj;
-struct List_adj_t {
-    List* head;
-    List_adj* next;
-};
-static List_adj List_head_next_list[LIST_MAX_NUM_HEADS];
-static List_adj* List_next_head;
+static List* List_next_head;
 
 /* List Node Variables */
 static Node List_nodeArray[LIST_MAX_NUM_NODES];
@@ -37,15 +29,13 @@ static Node* List_next_node;
 
 static void List_initialize(){
     // Set up stack for List heads
-    for(int i=0; i<LIST_MAX_NUM_HEADS; ++i){
-        List_head_next_list[i].head = &List_headArray[i];
-        List_head_next_list[i].head->index = i;
-        if(i != LIST_MAX_NUM_HEADS-1){
-            List_head_next_list[i].next = &List_head_next_list[i+1];
-        }
+    for(int i=0; i<LIST_MAX_NUM_HEADS-1; ++i){
+        List_headArray[i].nextHead = &List_headArray[i+1];
+        List_headArray[i].inUse = false;
     }
-    List_head_next_list[LIST_MAX_NUM_HEADS-1].next = NULL;
-    List_next_head = &List_head_next_list[0];
+    List_headArray[LIST_MAX_NUM_HEADS].nextHead = NULL;
+    List_headArray[LIST_MAX_NUM_HEADS].inUse = false;
+    List_next_head = &List_headArray[0];
 
     // Set up single linked indexes for List Nodes
     for(int i=0; i<LIST_MAX_NUM_NODES-1; ++i){
@@ -65,18 +55,20 @@ List* List_create(){
         return NULL;
     }
 
-    List* pList = List_next_head->head;
-    List_next_head = List_next_head->next;
+    List* pList = List_next_head;
+    List_next_head = List_next_head->nextHead;
     pList->curNode = NULL;
     pList->lastNode = NULL;
     pList->lastNode = NULL;
     pList->boundCheck = LIST_EMPTY;
     pList->size = 0;
+    pList->inUse = true;
     return pList;
 }
 
 int List_count(List* pList){
     assert(pList != NULL);
+    assert(pList->inUse);
     return pList->size;
 }
 
@@ -84,6 +76,7 @@ int List_count(List* pList){
 
 void* List_curr(List* pList){
     assert(pList != NULL);
+    assert(pList->inUse);
     if(pList->size == 0 || pList->boundCheck == LIST_OOB_END || pList->boundCheck == LIST_OOB_START){
         return NULL;
     }  
@@ -92,6 +85,7 @@ void* List_curr(List* pList){
 
 void* List_first(List* pList){
     assert(pList != NULL);
+    assert(pList->inUse);
     if(pList->size == 0){
         return NULL;
     }
@@ -102,6 +96,7 @@ void* List_first(List* pList){
 
 void* List_last(List* pList){
     assert(pList != NULL);
+    assert(pList->inUse);
     if(pList->size == 0){
         return NULL;
     }
@@ -112,6 +107,7 @@ void* List_last(List* pList){
 
 void* List_next(List* pList){
     assert(pList != NULL);
+    assert(pList->inUse);
     if(pList->size == 0 || pList->boundCheck == LIST_OOB_END){
         return NULL;
     }
@@ -130,6 +126,7 @@ void* List_next(List* pList){
 
 void* List_prev(List* pList){
     assert(pList != NULL);
+    assert(pList->inUse);
     if(pList->size == 0 || pList->boundCheck == LIST_OOB_START){
         return NULL;
     }
@@ -150,6 +147,7 @@ void* List_prev(List* pList){
 
 int List_add(List* pList, void* pItem){
     assert(pList != NULL);
+    assert(pList->inUse);
     if(List_next_node == NULL){
         return LIST_FAIL;
     }
@@ -200,6 +198,7 @@ int List_add(List* pList, void* pItem){
 
 int List_insert(List* pList, void* pItem){
     assert(pList != NULL);
+    assert(pList->inUse);
     if(List_next_node == NULL){
         return LIST_FAIL;
     } 
@@ -251,6 +250,7 @@ int List_insert(List* pList, void* pItem){
 
 int List_append(List* pList, void* pItem){
     assert(pList != NULL);
+    assert(pList->inUse);
     if(List_next_node == NULL){
         return LIST_FAIL;
     } 
@@ -285,6 +285,7 @@ int List_append(List* pList, void* pItem){
 
 int List_prepend(List* pList, void* pItem){
     assert(pList != NULL);
+    assert(pList->inUse);
     if(List_next_node == NULL){
         return LIST_FAIL;
     } 
@@ -319,6 +320,7 @@ int List_prepend(List* pList, void* pItem){
 
 static void List_add_to_empty(List* pList, void* pItem){
     assert(pList != NULL);
+    assert(pList->inUse);
     assert(pList->size == 0);
     assert(pList->boundCheck == LIST_EMPTY);
     // Empty List Case
@@ -342,6 +344,7 @@ static void List_add_to_empty(List* pList, void* pItem){
 
 static void List_add_OOB_start(List* pList, void* pItem){
     assert(pList != NULL);
+    assert(pList->inUse);
     assert(pList->boundCheck == LIST_OOB_START);
     // before:              after:
     //        Nd0                   New -> Nd0
@@ -368,6 +371,7 @@ static void List_add_OOB_start(List* pList, void* pItem){
 
 static void List_add_OOB_end(List* pList, void* pItem){
     assert(pList != NULL);
+    assert(pList->inUse);
     assert(pList->boundCheck == LIST_OOB_END);
     // before:          after:
     //      Nd0             Nd0 -> New
@@ -396,6 +400,7 @@ static void List_add_OOB_end(List* pList, void* pItem){
 
 void* List_remove(List* pList){
     assert(pList != NULL);
+    assert(pList->inUse);
     if(pList->boundCheck == LIST_IN_BOUNDS){
         // before:                      after:
         //      Nd0 -> Nd1 -> Nd2           Nd0 -> Nd2
@@ -447,6 +452,7 @@ void* List_remove(List* pList){
 
 void* List_trim(List* pList){
     assert(pList != NULL);
+    assert(pList->inUse);
     // TODO if statement incorrect
     if(pList->boundCheck != LIST_EMPTY){
         // before:              after:
@@ -485,15 +491,18 @@ void* List_trim(List* pList){
 
 void List_concat(List* pList1, List* pList2){
     assert(pList1 != NULL);
+    assert(pList1->inUse);
     if(pList2 == NULL){
         return;
-    } else if(pList2->size == 0){
+    } 
+    assert(pList2->inUse);
+    if(pList2->size == 0){
         // Pass
         // Concatination with nothing should be unchanged
     } else if (pList1->size == 0){
-        List* temp = pList1;
-        pList1 = pList2;
-        pList2 = temp;
+        pList1->firstNode = pList2->firstNode;
+        pList1->lastNode = pList2->lastNode;
+        pList1->size = pList2->size;
 
         // move current pointer to "before" list
         pList1->curNode = NULL;
@@ -510,16 +519,15 @@ void List_concat(List* pList1, List* pList2){
     pList2->curNode = NULL;
     pList2->boundCheck = LIST_EMPTY;
     pList2->size = 0;
-    List_adj* temp = &List_head_next_list[pList2->index];
-    temp->head = pList2;
-    temp->next = List_next_head;
-    List_next_head = temp;
-    pList2 = NULL;
+    pList2->inUse = false;
+    pList2->nextHead = List_next_head;
+    List_next_head = pList2;
 }
 
 void List_free(List* pList, FREE_FN pItemFreeFn){
     assert(pList != NULL);
     assert(pItemFreeFn != NULL);
+    assert(pList->inUse);
     void* pItem;
     List_last(pList);
     while(pList->curNode != NULL){
@@ -531,19 +539,20 @@ void List_free(List* pList, FREE_FN pItemFreeFn){
     assert(pList->curNode == NULL);
     assert(pList->boundCheck == LIST_EMPTY);
     assert(pList->size == 0);
-
-    List_adj* temp = &List_head_next_list[pList->index];
-    temp->head = pList;
-    temp->next = List_next_head;
-    List_next_head = temp;
-    pList = NULL;
+    pList->inUse = false;
+    pList->nextHead = List_next_head;
+    List_next_head = pList;
 }
 
 void* List_search(List* pList, COMPARATOR_FN pComparator, void* pComparisonArg){
     assert(pList != NULL);
     assert(pComparator != NULL);
     assert(pComparisonArg != NULL);
-    
+    assert(pList->inUse);
+    if(pList->size == 0){
+        return NULL;
+    }
+
     if(pList->curNode == NULL && pList->boundCheck == LIST_OOB_START){
         pList->curNode = pList->firstNode;
     }
