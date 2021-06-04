@@ -25,10 +25,12 @@ enum ListOutOfBounds {
 
 typedef struct List_s List;
 struct List_s{
-    Node* curNode;
+    union{
+        Node* curNode;
+        List* nextHead;
+    } pCur_Hn;
     Node* firstNode;
     Node* lastNode;
-    List* nextHead;
     unsigned short size;
     unsigned char boundCheck;
     bool inUse;

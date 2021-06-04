@@ -30,10 +30,10 @@ static Node* List_next_node;
 static void List_initialize(){
     // Set up stack for List heads
     for(int i=0; i<LIST_MAX_NUM_HEADS-1; ++i){
-        List_headArray[i].nextHead = &List_headArray[i+1];
+        List_headArray[i].pCur_Hn.nextHead = &List_headArray[i+1];
         List_headArray[i].inUse = false;
     }
-    List_headArray[LIST_MAX_NUM_HEADS].nextHead = NULL;
+    List_headArray[LIST_MAX_NUM_HEADS].pCur_Hn.nextHead = NULL;
     List_headArray[LIST_MAX_NUM_HEADS].inUse = false;
     List_next_head = &List_headArray[0];
 
@@ -56,8 +56,8 @@ List* List_create(){
     }
 
     List* pList = List_next_head;
-    List_next_head = List_next_head->nextHead;
-    pList->curNode = NULL;
+    List_next_head = List_next_head->pCur_Hn.nextHead;
+    pList->pCur_Hn.curNode = NULL;
     pList->lastNode = NULL;
     pList->lastNode = NULL;
     pList->boundCheck = LIST_EMPTY;
@@ -80,7 +80,7 @@ void* List_curr(List* pList){
     if(pList->size == 0 || pList->boundCheck == LIST_OOB_END || pList->boundCheck == LIST_OOB_START){
         return NULL;
     }  
-    return pList->curNode->item;
+    return pList->pCur_Hn.curNode->item;
 }
 
 void* List_first(List* pList){
@@ -89,9 +89,9 @@ void* List_first(List* pList){
     if(pList->size == 0){
         return NULL;
     }
-    pList->curNode = pList->firstNode;
+    pList->pCur_Hn.curNode = pList->firstNode;
     pList->boundCheck = LIST_IN_BOUNDS;
-    return pList->curNode->item;
+    return pList->pCur_Hn.curNode->item;
 }
 
 void* List_last(List* pList){
@@ -100,9 +100,9 @@ void* List_last(List* pList){
     if(pList->size == 0){
         return NULL;
     }
-    pList->curNode = pList->lastNode;
+    pList->pCur_Hn.curNode = pList->lastNode;
     pList->boundCheck = LIST_IN_BOUNDS;
-    return pList->curNode->item;
+    return pList->pCur_Hn.curNode->item;
 }
 
 void* List_next(List* pList){
@@ -111,17 +111,17 @@ void* List_next(List* pList){
     if(pList->size == 0 || pList->boundCheck == LIST_OOB_END){
         return NULL;
     }
-    else if(pList->curNode == pList->lastNode){
+    else if(pList->pCur_Hn.curNode == pList->lastNode){
         pList->boundCheck = LIST_OOB_END;
-        pList->curNode = NULL;
+        pList->pCur_Hn.curNode = NULL;
         return NULL;
     } else if (pList->boundCheck == LIST_OOB_START){
-        pList->curNode = pList->firstNode;
+        pList->pCur_Hn.curNode = pList->firstNode;
         pList->boundCheck = LIST_IN_BOUNDS;
-        return pList->curNode->item;
+        return pList->pCur_Hn.curNode->item;
     } 
-    pList->curNode = pList->curNode->next;
-    return pList->curNode->item;
+    pList->pCur_Hn.curNode = pList->pCur_Hn.curNode->next;
+    return pList->pCur_Hn.curNode->item;
 }
 
 void* List_prev(List* pList){
@@ -130,17 +130,17 @@ void* List_prev(List* pList){
     if(pList->size == 0 || pList->boundCheck == LIST_OOB_START){
         return NULL;
     }
-    if(pList->curNode == pList->firstNode){
+    if(pList->pCur_Hn.curNode == pList->firstNode){
         pList->boundCheck = LIST_OOB_START;
-        pList->curNode = NULL;
+        pList->pCur_Hn.curNode = NULL;
         return NULL;
     } else if (pList -> boundCheck == LIST_OOB_END){
-        pList->curNode = pList->lastNode;
+        pList->pCur_Hn.curNode = pList->lastNode;
         pList->boundCheck = LIST_IN_BOUNDS;
-        return pList->curNode->item;
+        return pList->pCur_Hn.curNode->item;
     }
-    pList->curNode = pList->curNode->prev;
-    return pList->curNode->item;
+    pList->pCur_Hn.curNode = pList->pCur_Hn.curNode->prev;
+    return pList->pCur_Hn.curNode->item;
 }
 
 /* Functions to Add Nodes to list */
@@ -161,9 +161,9 @@ int List_add(List* pList, void* pItem){
         //     Nd0 -> Nd1           Nd0 -> NEW -> Nd1
         //      |                           |
         //     cur                         cur
-        assert(pList->curNode != NULL);
-        Node* Node0 = pList->curNode;
-        Node* Node1 = pList->curNode->next;
+        assert(pList->pCur_Hn.curNode != NULL);
+        Node* Node0 = pList->pCur_Hn.curNode;
+        Node* Node1 = pList->pCur_Hn.curNode->next;
         Node* NewNode = List_next_node;
         
         // Set up next node
@@ -181,7 +181,7 @@ int List_add(List* pList, void* pItem){
 
         // Update fields
         NewNode->item = pItem;
-        pList->curNode = NewNode;
+        pList->pCur_Hn.curNode = NewNode;
         ++(pList->size);
     } else if(pList->boundCheck == LIST_OOB_START){
         // Current Node Before List
@@ -213,9 +213,9 @@ int List_insert(List* pList, void* pItem){
         //             |                    |
         //            cur                  cur
 
-        assert(pList->curNode != NULL);
-        Node* Node0 = pList->curNode->prev;
-        Node* Node1 = pList->curNode;
+        assert(pList->pCur_Hn.curNode != NULL);
+        Node* Node0 = pList->pCur_Hn.curNode->prev;
+        Node* Node1 = pList->pCur_Hn.curNode;
         Node* NewNode = List_next_node;
         
         // Set up next node
@@ -233,7 +233,7 @@ int List_insert(List* pList, void* pItem){
 
         // Update Fields
         NewNode->item = pItem;
-        pList->curNode = NewNode;
+        pList->pCur_Hn.curNode = NewNode;
         ++(pList->size);
     } else if(pList->boundCheck == LIST_OOB_START){
         // Current Node Before List
@@ -276,7 +276,7 @@ int List_append(List* pList, void* pItem){
         // Update Fields
         NewNode->item = pItem;
         pList->lastNode = NewNode;
-        pList->curNode = NewNode;
+        pList->pCur_Hn.curNode = NewNode;
         pList->boundCheck = LIST_IN_BOUNDS;
         ++(pList->size);
     }
@@ -311,7 +311,7 @@ int List_prepend(List* pList, void* pItem){
         // Update Fields
         NewNode->item = pItem;
         pList->firstNode = NewNode;
-        pList->curNode = NewNode;
+        pList->pCur_Hn.curNode = NewNode;
         pList->boundCheck = LIST_IN_BOUNDS;
         ++(pList->size);
     }
@@ -337,7 +337,7 @@ static void List_add_to_empty(List* pList, void* pItem){
     // Set List Values to be correct
     pList->boundCheck = LIST_IN_BOUNDS;
     pList->size = 1;
-    pList->curNode = NewNode;
+    pList->pCur_Hn.curNode = NewNode;
     pList->firstNode = NewNode;
     pList->lastNode = NewNode;
 }
@@ -364,7 +364,7 @@ static void List_add_OOB_start(List* pList, void* pItem){
     // Update Fields
     NewNode->item = pItem;
     pList->firstNode = NewNode;
-    pList->curNode = NewNode;
+    pList->pCur_Hn.curNode = NewNode;
     pList->boundCheck = LIST_IN_BOUNDS;
     ++(pList->size);
 }
@@ -391,7 +391,7 @@ static void List_add_OOB_end(List* pList, void* pItem){
     // Update Fields
     NewNode->item = pItem;
     pList->lastNode = NewNode;
-    pList->curNode = NewNode;
+    pList->pCur_Hn.curNode = NewNode;
     pList->boundCheck = LIST_IN_BOUNDS;
     ++(pList->size);
 }
@@ -407,11 +407,11 @@ void* List_remove(List* pList){
         //              |                           |
         //             cur                         cur
         // Note: cur may potentially be NULL after this operation
-        assert(pList->curNode != NULL);
-        Node* Node0 = pList->curNode->prev;
-        Node* Node1 = pList->curNode;
-        Node* Node2 = pList->curNode->next;
-        void* pItem = pList->curNode->item;
+        assert(pList->pCur_Hn.curNode != NULL);
+        Node* Node0 = pList->pCur_Hn.curNode->prev;
+        Node* Node1 = pList->pCur_Hn.curNode;
+        Node* Node2 = pList->pCur_Hn.curNode->next;
+        void* pItem = pList->pCur_Hn.curNode->item;
         
         // Update Pointers
         if(Node0 != NULL && Node2 != NULL){
@@ -441,7 +441,7 @@ void* List_remove(List* pList){
         List_next_node = Node1;
 
         // Update Remaining Fields
-        pList->curNode = Node2;
+        pList->pCur_Hn.curNode = Node2;
         --(pList->size);
         return pItem;
     }
@@ -478,7 +478,7 @@ void* List_trim(List* pList){
             pList->firstNode = NULL;            
             pList->boundCheck = LIST_EMPTY;
         }
-        pList->curNode = Node0;
+        pList->pCur_Hn.curNode = Node0;
         pList->lastNode = Node0;
         --(pList->size);
         return pItem;
@@ -505,7 +505,7 @@ void List_concat(List* pList1, List* pList2){
         pList1->size = pList2->size;
 
         // move current pointer to "before" list
-        pList1->curNode = NULL;
+        pList1->pCur_Hn.curNode = NULL;
         pList1->boundCheck = LIST_OOB_START;
     } else {
         pList1->lastNode->next = pList2->firstNode;
@@ -516,11 +516,11 @@ void List_concat(List* pList1, List* pList2){
     // return pList2 to the pool of heads
     pList2->firstNode = NULL;
     pList2->lastNode = NULL;
-    pList2->curNode = NULL;
+    pList2->pCur_Hn.curNode = NULL;
     pList2->boundCheck = LIST_EMPTY;
     pList2->size = 0;
     pList2->inUse = false;
-    pList2->nextHead = List_next_head;
+    pList2->pCur_Hn.nextHead = List_next_head;
     List_next_head = pList2;
 }
 
@@ -530,17 +530,17 @@ void List_free(List* pList, FREE_FN pItemFreeFn){
     assert(pList->inUse);
     void* pItem;
     List_last(pList);
-    while(pList->curNode != NULL){
+    while(pList->pCur_Hn.curNode != NULL){
         pItem = List_trim(pList);
         (*pItemFreeFn)(pItem);
     }
     assert(pList->firstNode == NULL);
     assert(pList->lastNode == NULL);
-    assert(pList->curNode == NULL);
+    assert(pList->pCur_Hn.curNode == NULL);
     assert(pList->boundCheck == LIST_EMPTY);
     assert(pList->size == 0);
     pList->inUse = false;
-    pList->nextHead = List_next_head;
+    pList->pCur_Hn.nextHead = List_next_head;
     List_next_head = pList;
 }
 
@@ -553,13 +553,13 @@ void* List_search(List* pList, COMPARATOR_FN pComparator, void* pComparisonArg){
         return NULL;
     }
 
-    if(pList->curNode == NULL && pList->boundCheck == LIST_OOB_START){
-        pList->curNode = pList->firstNode;
+    if(pList->pCur_Hn.curNode == NULL && pList->boundCheck == LIST_OOB_START){
+        pList->pCur_Hn.curNode = pList->firstNode;
     }
-    while(pList->curNode != NULL){
-        if(pComparator(pList->curNode->item, pComparisonArg) == true){
+    while(pList->pCur_Hn.curNode != NULL){
+        if(pComparator(pList->pCur_Hn.curNode->item, pComparisonArg) == true){
             pList->boundCheck = LIST_IN_BOUNDS;
-            return pList->curNode->item;
+            return pList->pCur_Hn.curNode->item;
         }
         List_next(pList);
     }
