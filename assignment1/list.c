@@ -3,7 +3,14 @@
 #include <stdio.h>
 
 #include "list.h"
+/*
+    List.h implementation
+    David Bechert
+    301359540
+    2021 - Jun - 04
 
+    This file implements the functions in list.h
+*/
 /* Static Function Declarations */
 // O(n) setup function for lists called the first time List_create is called.
 static void List_initialize();
@@ -15,20 +22,32 @@ static void List_add_OOB_start(List* pList, void* pItem);
 static void List_add_OOB_end(List* pList, void* pItem);
 
 /* List Variables */
+// True once List_create() has been called once
 static bool List_initialized = false;
 
 /* List Head Variables */
+// Statically allocated pool of list heads
 static List List_headArray[LIST_MAX_NUM_HEADS];
+// The next head to be used for a list when List_create is called
 static List* List_next_head;
 
 /* List Node Variables */
+// Statically allocated pool of List nodes
 static Node List_nodeArray[LIST_MAX_NUM_NODES];
+// The next node to be used when adding a nod eto a List
 static Node* List_next_node;
 
 /* Start of Function Definitions */
 
 static void List_initialize(){
-    // Set up stack for List heads
+    // Set up single linked list for List Heads
+    //  allows the "front" of this list to be removed or added to 
+    //  when a list is created or destroed respectively 
+    //
+    // The List struct has a union field so that the -> operator 
+    //  works without pointer casting for both Lists and Nodes and 
+    //  so there is not an extra pointer that is unused when the list 
+    //  is in use
     for(int i=0; i<LIST_MAX_NUM_HEADS-1; ++i){
         List_headArray[i].pCur_Hn.nextHead = &List_headArray[i+1];
         List_headArray[i].inUse = false;
@@ -37,7 +56,9 @@ static void List_initialize(){
     List_headArray[LIST_MAX_NUM_HEADS].inUse = false;
     List_next_head = &List_headArray[0];
 
-    // Set up single linked indexes for List Nodes
+    // Set up single linked list for List Nodes
+    //  the implementation for keeping track of unused nodes is the 
+    //  same for those of the heads
     for(int i=0; i<LIST_MAX_NUM_NODES-1; ++i){
         List_nodeArray[i].next = &List_nodeArray[i+1];
     }
@@ -46,17 +67,21 @@ static void List_initialize(){
 }
 
 List* List_create(){
+    // Call the O(n) function only on first creation
     if(!List_initialized){
         List_initialize();
         List_initialized = true;
     }
 
+    // Make sure all lists aren't in use
     if(List_next_head == NULL){
         return NULL;
     }
 
+    // Get the next Head and update the List_next_head
     List* pList = List_next_head;
     List_next_head = List_next_head->pCur_Hn.nextHead;
+    // Set all values to defaults
     pList->pCur_Hn.curNode = NULL;
     pList->lastNode = NULL;
     pList->lastNode = NULL;
@@ -148,6 +173,8 @@ void* List_prev(List* pList){
 int List_add(List* pList, void* pItem){
     assert(pList != NULL);
     assert(pList->inUse);
+
+    // Fail if out of nodes
     if(List_next_node == NULL){
         return LIST_FAIL;
     }
@@ -199,6 +226,8 @@ int List_add(List* pList, void* pItem){
 int List_insert(List* pList, void* pItem){
     assert(pList != NULL);
     assert(pList->inUse);
+
+    // Fail if no nodes left
     if(List_next_node == NULL){
         return LIST_FAIL;
     } 
@@ -345,7 +374,6 @@ static void List_add_to_empty(List* pList, void* pItem){
 static void List_add_OOB_start(List* pList, void* pItem){
     assert(pList != NULL);
     assert(pList->inUse);
-    assert(pList->boundCheck == LIST_OOB_START);
     // before:              after:
     //        Nd0                   New -> Nd0
     //    |    |                     |
@@ -372,7 +400,6 @@ static void List_add_OOB_start(List* pList, void* pItem){
 static void List_add_OOB_end(List* pList, void* pItem){
     assert(pList != NULL);
     assert(pList->inUse);
-    assert(pList->boundCheck == LIST_OOB_END);
     // before:          after:
     //      Nd0             Nd0 -> New
     //       |    |                 |
@@ -431,7 +458,6 @@ void* List_remove(List* pList){
             pList->lastNode = NULL;
             pList->firstNode = NULL;
             pList->boundCheck = LIST_EMPTY;
-            assert(pList->size == 1);
         }
 
         // Add Node1 Back into the pool of nodes
@@ -453,7 +479,6 @@ void* List_remove(List* pList){
 void* List_trim(List* pList){
     assert(pList != NULL);
     assert(pList->inUse);
-    // TODO if statement incorrect
     if(pList->boundCheck != LIST_EMPTY){
         // before:              after:
         //      Nd0 -> Nd1          Nd0
@@ -516,7 +541,6 @@ void List_concat(List* pList1, List* pList2){
     // return pList2 to the pool of heads
     pList2->firstNode = NULL;
     pList2->lastNode = NULL;
-    pList2->pCur_Hn.curNode = NULL;
     pList2->boundCheck = LIST_EMPTY;
     pList2->size = 0;
     pList2->inUse = false;
@@ -534,12 +558,8 @@ void List_free(List* pList, FREE_FN pItemFreeFn){
         pItem = List_trim(pList);
         (*pItemFreeFn)(pItem);
     }
-    assert(pList->firstNode == NULL);
-    assert(pList->lastNode == NULL);
-    assert(pList->pCur_Hn.curNode == NULL);
-    assert(pList->boundCheck == LIST_EMPTY);
-    assert(pList->size == 0);
     pList->inUse = false;
+    // Add listg to pool of heads
     pList->pCur_Hn.nextHead = List_next_head;
     List_next_head = pList;
 }
@@ -549,20 +569,23 @@ void* List_search(List* pList, COMPARATOR_FN pComparator, void* pComparisonArg){
     assert(pComparator != NULL);
     assert(pComparisonArg != NULL);
     assert(pList->inUse);
+    // If the list is empty simply return null
     if(pList->size == 0){
         return NULL;
     }
-
+    // If at out of bounds start, move to start of list
     if(pList->pCur_Hn.curNode == NULL && pList->boundCheck == LIST_OOB_START){
         pList->pCur_Hn.curNode = pList->firstNode;
     }
     while(pList->pCur_Hn.curNode != NULL){
+        // Compare the current node with input argument
         if(pComparator(pList->pCur_Hn.curNode->item, pComparisonArg) == true){
             pList->boundCheck = LIST_IN_BOUNDS;
             return pList->pCur_Hn.curNode->item;
         }
         List_next(pList);
     }
+    // If list has gone through entirity without finding then it is now OOB End
     pList->boundCheck = LIST_OOB_END;
     return NULL;
 }
