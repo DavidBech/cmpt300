@@ -1,0 +1,3 @@
+ASSIGNMENT 2 -- TODO
+
+    As of jun7 this directory just compiles and runs David's assignment1 code for the sake of testing the Makefile
