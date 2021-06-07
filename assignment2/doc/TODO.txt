@@ -1,3 +1,18 @@
 ASSIGNMENT 2 -- TODO
 
     As of jun7 this directory just compiles and runs David's assignment1 code for the sake of testing the Makefile
+
+
+
+TODO 
+Threads:
+    1. wait for keyboard input
+        - Adds input to the lists of messages that must be sent to remote s-talk client
+    2. wait for UDP datagram
+        - Adds incoming mesage to list of messages to be output
+    3. print character to output
+        - Takes messages off of incoming and outputs to screen
+    4. send data to remote process using UDP
+        - Waits for thread 1 to produce a message for it to send
+
+
