@@ -1,12 +1,11 @@
 .PHONY: all, clean, run, valgrind, dirs
 PROGNAME := a.out
 
-INC_P = 0
-OUT_M = "Name"
-OUT_P = 1
+INC_P = 123456
+OUT_M = "Out_Machine_Name"
+OUT_P = 654321
 
 RM := rm -f
-MKDIR_P := mkdir -p
 COMP_FLAGS := -Wall -Werror -g
 
 SRC_DIR := src
@@ -18,7 +17,7 @@ SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
 INC_FILES = $(wildcard $(SRC_DIR)/*.h)
 OBJ_FILES = $(SRC_FILES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
-all: dirs $(BIN_DIR)/$(PROGNAME) 
+all: $(BIN_DIR)/$(PROGNAME) 
 
 $(BIN_DIR)/$(PROGNAME): $(OBJ_FILES)
 	gcc -o $@ $^
@@ -26,13 +25,9 @@ $(BIN_DIR)/$(PROGNAME): $(OBJ_FILES)
 $(OBJ_FILES): $(OBJ_DIR)/%.o :  $(SRC_DIR)/%.c
 	gcc $(COMP_FLAGS) -c $< -o $@
 
-dirs:
-	$(MKDIR_P) $(OBJ_DIR)
-
 clean: 
 	$(RM) $(BIN_DIR)/$(PROGNAME)
 	$(RM) $(OBJ_DIR)/*.o
-	rmdir $(OBJ_DIR)
  
 run: all
 	./$(BIN_DIR)/$(PROGNAME) $(INC_P) $(OUT_M) $(OUT_P)
