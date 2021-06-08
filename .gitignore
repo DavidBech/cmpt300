@@ -2,5 +2,5 @@ assignment1/*.o
 assignment1/a.out
 assignment1/.vscode
 
-assignment2/bin/*
 assignment2/obj/*
+assignment2/a.out
