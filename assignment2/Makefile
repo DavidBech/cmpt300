@@ -1,12 +1,12 @@
 .PHONY: all, clean, run, valgrind, dirs
 PROGNAME := a.out
 
-INC_P = 123456
+INC_P = 42069
 OUT_M = "Out_Machine_Name"
-OUT_P = 654321
+OUT_P = 69420
 
 RM := rm -f
-COMP_FLAGS := -Wall -Werror -g
+CFLAGS := $(CFLAGS) -Wall -Werror -g
 
 SRC_DIR := src
 OBJ_DIR := obj
