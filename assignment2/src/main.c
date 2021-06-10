@@ -12,7 +12,7 @@
 int main(int argc, char** argv){
     if(argc != 4){
         fprintf(stderr, "Invalid Number of Input Arguments \n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     List* tx_list = List_create();
     List* rx_list = List_create();
