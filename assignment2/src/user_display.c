@@ -10,8 +10,8 @@ static pthread_t user_display_pid;
 static void* user_display_loop(void* arg){
     printf("Started User Display\n");
     // TODO - wait for rx_list to have messages to display to screen
-        while(1){
-        printf(" \b");
+    while(1){
+        pthread_testcancel();
     }
     return NULL;
 }

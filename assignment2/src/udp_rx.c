@@ -14,7 +14,7 @@ static void* upd_recieve_loop(void* arg){
     printf("Started UPD Receiver\n");
     // TODO - coninually read upd socket adding recieved messages to rx_list
     while(1){
-        printf(" \b");
+        pthread_testcancel();
     }
     printf("should never happen\n");
     return NULL;

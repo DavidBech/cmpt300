@@ -19,15 +19,11 @@ int main(int argc, char** argv){
     user_display_init();
     user_reader_init();
     
-    char user_input[MAX_USER_INPUT];
-    printf("Input To End Program:\n");
-    scanf("%s", user_input);
-
-
+    user_reader_destroy();
     udp_rx_destroy();
     udp_tx_destroy();
     user_display_destroy();
-    user_reader_destroy();
+    
   
     printf("Finished Main\n");
 

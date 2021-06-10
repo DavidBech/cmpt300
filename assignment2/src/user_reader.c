@@ -9,10 +9,15 @@ static void* user_reader_loop(void* arg);
 static pthread_t user_reader_pid;
 
 static void* user_reader_loop(void* arg){
-    // TODO - read user input 
+    // TODO - read user input puting messages onto a List
     printf("Started User Reader\n");
     while(1){
-        printf(" \b");
+        char user_input[MAX_USER_INPUT];
+        printf("Input '!' To End Program:\n");
+        scanf("%s", user_input);
+        if(user_input[0] == '!'){
+            break;
+        }
     }
     return NULL;
 }
@@ -23,9 +28,10 @@ void user_reader_init(){
 
 void user_reader_destroy(){
     // Stops the thread
-    pthread_cancel(user_reader_pid);
+    //pthread_cancel(user_reader_pid);
+    // The reader is killed when the input is '!' doesn't need to be canceled
 
     // Waits until thread finishes before continuing 
     pthread_join(user_reader_pid, NULL);
-    printf("Finished User Display\n");
+    printf("Finished User Reader\n");
 }

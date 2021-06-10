@@ -14,7 +14,7 @@ static void* upd_transmit_loop(void* arg){
     printf("Started UPD Transmitor\n");
     // TODO - coninually wait for tx_list to have messages to send to other s-talk instance
     while(1){
-        printf(" \b");
+        pthread_testcancel();
     }
     return NULL;
 }
