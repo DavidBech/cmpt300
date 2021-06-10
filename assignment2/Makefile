@@ -6,11 +6,10 @@ OUT_M = "Out_Machine_Name"
 OUT_P = 69420
 
 RM := rm -f
-CFLAGS := $(CFLAGS) -Wall -Werror -g -lpthread
-
+CFLAGS := $(CFLAGS) -Wall -Werror -g
+LFLAGS := $(LFLAGS) -pthread -lpthread
 SRC_DIR := src
 OBJ_DIR := obj
-# If this changes add it to dirs and clean targets
 BIN_DIR := .
 
 SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
@@ -20,7 +19,7 @@ OBJ_FILES = $(SRC_FILES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 all: $(BIN_DIR)/$(PROGNAME) 
 
 $(BIN_DIR)/$(PROGNAME): $(OBJ_FILES)
-	gcc -o $@ $^
+	gcc $(LFLAGS) -o $@ $^
  
 $(OBJ_FILES): $(OBJ_DIR)/%.o :  $(SRC_DIR)/%.c
 	gcc $(CFLAGS) -c $< -o $@

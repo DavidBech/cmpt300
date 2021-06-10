@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "list.h": "c",
+        "user_display.h": "c",
+        "unistd.h": "c",
+        "stdio.h": "c",
+        "udp_rx.h": "c",
+        "user_reader.h": "c"
+    }
+}
