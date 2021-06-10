@@ -6,14 +6,16 @@ OUT_M = "Out_Machine_Name"
 OUT_P = 69420
 
 RM := rm -f
-CFLAGS := $(CFLAGS) -Wall -Werror -g
-LFLAGS := $(LFLAGS) -pthread -lpthread
 SRC_DIR := src
+INC_DIR := headers
 OBJ_DIR := obj
 BIN_DIR := .
 
+CFLAGS := $(CFLAGS) -Wall -Werror -g -iquote $(INC_DIR)
+LFLAGS := $(LFLAGS) -pthread -lpthread
+
 SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
-INC_FILES = $(wildcard $(SRC_DIR)/*.h)
+INC_FILES = $(wildcard $(INC_DIR)/*.h)
 OBJ_FILES = $(SRC_FILES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 all: $(BIN_DIR)/$(PROGNAME) 
