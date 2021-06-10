@@ -4,6 +4,7 @@
 #include <pthread.h> 
 
 #include "udp_rx.h"
+#include "list.h"
 
 static void* upd_recieve_loop(void* arg);
 
@@ -20,7 +21,7 @@ static void* upd_recieve_loop(void* arg){
     return NULL;
 }
 
-void udp_rx_init(char* rx_port){
+void udp_rx_init(char* rx_port, List* rx_list){
     // TODO - Create UPD socket and bind it to the port
     pthread_create(&upd_rx_pid, NULL, upd_recieve_loop, NULL);
 }

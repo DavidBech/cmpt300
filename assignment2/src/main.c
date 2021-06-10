@@ -13,11 +13,14 @@ int main(int argc, char** argv){
         fprintf(stderr, "Invalid Number of Input Arguments \n");
         exit(1);
     }
-    
-    udp_rx_init(argv[1]);
-    udp_tx_init(argv[2], argv[3]);
-    user_display_init();
-    user_reader_init();
+    List* tx_list = List_create();
+    List* rx_list = List_create();
+
+    udp_rx_init(argv[1], rx_list);
+    udp_tx_init(argv[2], argv[3], tx_list);
+    user_display_init(rx_list);
+    user_reader_init(tx_list);
+    // TODO - set main in a wait loop before killing all processes
     
     user_reader_destroy();
     udp_rx_destroy();

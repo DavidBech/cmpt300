@@ -4,6 +4,7 @@
 #include <pthread.h> 
 
 #include "udp_tx.h"
+#include "list.h"
 
 static void* upd_transmit_loop(void* arg);
 
@@ -19,7 +20,7 @@ static void* upd_transmit_loop(void* arg){
     return NULL;
 }
 
-void udp_tx_init(char* tx_machine, char* tx_port){
+void udp_tx_init(char* tx_machine, char* tx_port, List* tx_list){
     // TODO - Create UPD socket and bind it to the port
     pthread_create(&upd_tx_pid, NULL, upd_transmit_loop, NULL);
 }

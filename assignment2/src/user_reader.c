@@ -3,6 +3,7 @@
 #include <pthread.h>
 
 #include "user_reader.h"
+#include "list.h"
 
 static void* user_reader_loop(void* arg);
 
@@ -22,7 +23,7 @@ static void* user_reader_loop(void* arg){
     return NULL;
 }
 
-void user_reader_init(){
+void user_reader_init(List* tx_list){
     pthread_create(&user_reader_pid, NULL, user_reader_loop, NULL);
 }
 

@@ -2,6 +2,7 @@
 #include <pthread.h>
 
 #include "user_display.h"
+#include "list.h"
 
 static void* user_display_loop(void* arg);
 
@@ -16,7 +17,7 @@ static void* user_display_loop(void* arg){
     return NULL;
 }
 
-void user_display_init(){
+void user_display_init(List* rx_list){
     // TODO - Create UPD socket and bind it to the port
     pthread_create(&user_display_pid, NULL, user_display_loop, NULL);
 }
