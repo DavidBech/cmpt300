@@ -1,31 +1,35 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>  
+
 
 #include "list.h"
-
-#define INVALID_INPUT 1
+#include "user_display.h"
+#include "user_reader.h"
+#include "udp_rx.h"
+#include "udp_tx.h"
 
 int main(int argc, char** argv){
     char *endptr;
-    long in_port;
-    long out_port;
-    char *out_machine;
+    long rx_port;
+    long tx_port;
+    char *tx_machine;
 
-    in_port = strtol(argv[1], &endptr, 10);
+    rx_port = strtol(argv[1], &endptr, 10);
     if(endptr == argv[1]){
-        fprintf(stderr, "Invalid In Port input: %s", argv[1]);
-        exit(INVALID_INPUT);
+        fprintf(stderr, "Invalid Rx Port input: %s", argv[1]);
+        exit(1);
     }
-    out_machine = argv[2];
-    out_port = strtol(argv[3], &endptr, 10);
+    tx_machine = argv[2];
+    tx_port = strtol(argv[3], &endptr, 10);
     if(endptr == argv[3]){
-        fprintf(stderr, "Invalid In Port input: %s", argv[3]);
-        exit(INVALID_INPUT);
+        fprintf(stderr, "Invalid Tx Port input: %s", argv[3]);
+        exit(1);
     }
 
-    printf("in_port: %ld \n", in_port);
-    printf("out_machine: %s \n", out_machine);
-    printf("out_port: %ld \n", out_port);
+    printf("rx_port: %ld \n", rx_port);
+    printf("tx_machine: %s \n", tx_machine);
+    printf("tx_port: %ld \n", tx_port);
 
     return(0);
 }
