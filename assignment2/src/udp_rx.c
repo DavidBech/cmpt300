@@ -5,6 +5,7 @@
 
 #include "udp_rx.h"
 #include "list.h"
+#include "stalk.h"
 
 static void* upd_recieve_loop(void* arg);
 

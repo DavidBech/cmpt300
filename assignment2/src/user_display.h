@@ -1,3 +1,5 @@
+#include "list.h"
+
 #ifndef _USER_DISPLAY_H_A2
 #define _USER_DISPLAY_H_A2
 // Initialize the user display 

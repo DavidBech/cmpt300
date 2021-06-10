@@ -3,6 +3,7 @@
 
 #include "user_display.h"
 #include "list.h"
+#include "stalk.h"
 
 static void* user_display_loop(void* arg);
 

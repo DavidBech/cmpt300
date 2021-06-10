@@ -5,6 +5,7 @@
 
 #include "udp_tx.h"
 #include "list.h"
+#include "stalk.h"
 
 static void* upd_transmit_loop(void* arg);
 

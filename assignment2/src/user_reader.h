@@ -1,6 +1,7 @@
+#include "list.h"
+
 #ifndef _USER_READER_H_A2
 #define _USER_READER_H_A2
-#define MAX_USER_INPUT 100
 
 // Initialize the udp transmition port 
 //  creates a new thread that monitors the input port

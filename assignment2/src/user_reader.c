@@ -4,6 +4,7 @@
 
 #include "user_reader.h"
 #include "list.h"
+#include "stalk.h"
 
 static void* user_reader_loop(void* arg);
 
@@ -13,10 +14,10 @@ static void* user_reader_loop(void* arg){
     // TODO - read user input puting messages onto a List
     printf("Started User Reader\n");
     while(1){
-        char user_input[MAX_USER_INPUT];
+        char user_input[MAX_MESSAGE_SIZE];
         printf("Input '!' To End Program:\n");
         scanf("%s", user_input);
-        if(user_input[0] == '!'){
+        if(user_input[0] == '!' && user_input[1] == '\0'){
             break;
         }
     }
