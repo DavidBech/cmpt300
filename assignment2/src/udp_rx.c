@@ -9,39 +9,15 @@
 #include "list.h"
 #include "stalk.h"
 
+// Loop that thread runs till cancled
 static void* upd_recieve_loop(void* arg);
-static int rx_socket_desc;
-static int port;
 
 static pthread_t upd_rx_pid;
-// TODO - add socket variables
 
-static void* upd_recieve_loop(void* arg){
-    printf("Started UPD Receiver\n");
-    // TODO - coninually read upd socket adding recieved messages to rx_list
-    //  currently waits for messages and prints them itself should put them on list
-    while(1){
-        struct sockaddr_in sinRemote;
-        unsigned int sin_len = sizeof(sinRemote);
-        char messageRx[MAX_MESSAGE_SIZE];
-        printf("Waiting for message\n");
-        // blocking call to receive message
-        int bytesRx = recvfrom(rx_socket_desc, messageRx, MAX_MESSAGE_SIZE, 0, (struct sockaddr *) &sinRemote, &sin_len);
-        
-        // prints out message
-        if(bytesRx == -1){
-            fprintf(stderr, "ERROR RECIEVING MESSAGE\n");
-            exit(EXIT_FAILURE);
-        } else {
-            int term_null = (bytesRx < MAX_MESSAGE_SIZE) ? bytesRx : MAX_MESSAGE_SIZE -1;
-            messageRx[term_null] = '\0';
-            printf("Message recieved %d Bytes: |%s|\n", bytesRx, messageRx);
-        }
-        
-    }
-    printf("should never happen\n");
-    return NULL;
-}
+// Socket recieving UDP packets on
+static int rx_socket_desc;
+// Port reciving UDP packets on
+static int port;
 
 void udp_rx_init(char* rx_port){
     // TODO - add error handling, 
@@ -70,9 +46,6 @@ void udp_rx_init(char* rx_port){
     pthread_create(&upd_rx_pid, NULL, upd_recieve_loop, NULL);
 }
 
-
-
-    
 void udp_rx_destroy(){
     // Stops the thread
     pthread_cancel(upd_rx_pid);
@@ -83,4 +56,31 @@ void udp_rx_destroy(){
     // Waits until thread finishes before continuing 
     pthread_join(upd_rx_pid, NULL);
     printf("Fished UPD Receiver\n");
+}
+
+static void* upd_recieve_loop(void* arg){
+    printf("Started UPD Receiver\n");
+    // TODO - coninually read upd socket adding recieved messages to rx_list
+    //  currently waits for messages and prints them itself should put them on list
+    while(1){
+        struct sockaddr_in sinRemote;
+        unsigned int sin_len = sizeof(sinRemote);
+        char messageRx[MAX_MESSAGE_SIZE];
+        printf("Waiting for message\n");
+        // blocking call to receive message
+        int bytesRx = recvfrom(rx_socket_desc, messageRx, MAX_MESSAGE_SIZE, 0, (struct sockaddr *) &sinRemote, &sin_len);
+        
+        // prints out message
+        if(bytesRx == -1){
+            fprintf(stderr, "ERROR RECIEVING MESSAGE\n");
+            exit(EXIT_FAILURE);
+        } else {
+            int term_null = (bytesRx < MAX_MESSAGE_SIZE) ? bytesRx : MAX_MESSAGE_SIZE -1;
+            messageRx[term_null] = '\0';
+            printf("Message recieved %d Bytes: |%s|\n", bytesRx, messageRx);
+        }
+        
+    }
+    printf("should never happen\n");
+    return NULL;
 }

@@ -15,9 +15,6 @@ int main(int argc, char** argv){
         fprintf(stderr, "Invalid Number of Input Arguments \n");
         exit(EXIT_FAILURE);
     }
-
-    // Create Shared Lists
-
  
     // Initialize Modules
     udp_rx_init(argv[1]);
