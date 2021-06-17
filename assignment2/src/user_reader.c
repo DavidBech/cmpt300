@@ -18,7 +18,7 @@ static void* user_reader_loop(void* arg){
         printf("Input '!' To End Program:\n");
         scanf("%s", user_input);
         if(user_input[0] == '!' && user_input[1] == '\0'){
-            break;
+            stalk_initiateShutdown();
         }
     }
     return NULL;
@@ -30,7 +30,7 @@ void user_reader_init(List* tx_list){
 
 void user_reader_destroy(){
     // Stops the thread
-    //pthread_cancel(user_reader_pid);
+    pthread_cancel(user_reader_pid);
     // The reader is killed when the input is '!' doesn't need to be canceled
 
     // Waits until thread finishes before continuing 

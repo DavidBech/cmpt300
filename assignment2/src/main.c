@@ -21,8 +21,10 @@ int main(int argc, char** argv){
     udp_tx_init(argv[2], argv[3], tx_list);
     user_display_init(rx_list);
     user_reader_init(tx_list);
-    // TODO - set main to wait for signal to end processes
     
+    // Wait for shutdown
+    stalk_waitForShutdown();
+
     user_reader_destroy();
     udp_rx_destroy();
     udp_tx_destroy();
