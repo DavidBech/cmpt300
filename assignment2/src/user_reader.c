@@ -16,15 +16,20 @@ static void* user_reader_loop(void* arg){
     while(1){
         char user_input[MAX_MESSAGE_SIZE];
         printf("Input '!' To End Program:\n");
+        // TODO, don't use scanf change to fgets
         scanf("%s", user_input);
+
+        // Case for termination -- TODO doesn't work for '! ' as input
         if(user_input[0] == '!' && user_input[1] == '\0'){
+            // TODO -- send shutdown to other stalk process
             stalk_initiateShutdown();
         }
+        // Else, append message to list
     }
     return NULL;
 }
 
-void user_reader_init(List* tx_list){
+void user_reader_init(){
     pthread_create(&user_reader_pid, NULL, user_reader_loop, NULL);
 }
 

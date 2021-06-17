@@ -43,7 +43,7 @@ static void* upd_recieve_loop(void* arg){
     return NULL;
 }
 
-void udp_rx_init(char* rx_port, List* rx_list){
+void udp_rx_init(char* rx_port){
     // TODO - add error handling, 
     //      the port setup could fail, etc
     //      port number could be not in valid range

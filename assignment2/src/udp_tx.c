@@ -21,8 +21,10 @@ static void* upd_transmit_loop(void* arg){
     return NULL;
 }
 
-void udp_tx_init(char* tx_machine, char* tx_port, List* tx_list){
+void udp_tx_init(char* tx_machine, char* tx_port){
     // TODO - Create UPD socket and bind it to the port
+
+    // Launch UDP tx thread
     pthread_create(&upd_tx_pid, NULL, upd_transmit_loop, NULL);
 }
 

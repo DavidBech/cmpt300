@@ -18,7 +18,7 @@ static void* user_display_loop(void* arg){
     return NULL;
 }
 
-void user_display_init(List* rx_list){
+void user_display_init(){
     // TODO - Create UPD socket and bind it to the port
     pthread_create(&user_display_pid, NULL, user_display_loop, NULL);
 }
