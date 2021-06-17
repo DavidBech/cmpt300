@@ -17,19 +17,16 @@ int main(int argc, char** argv){
     }
  
     // Initialize Modules
-    udp_rx_init(argv[1]);
-    udp_tx_init(argv[2], argv[3]);
-    user_display_init();
-    user_reader_init();
-    
+    stalk_initialize(argv);
+        
     // Wait for shutdown from either user_reader or udp_rx module
+    // TODO user_reader should not send the shutdown signal
+    //      udp_tx should as it ensures that the shutdown message will
+    //      be sent to the other stalk instance
     stalk_waitForShutdown();
 
     // Clean up all threads
-    user_reader_destroy();
-    udp_rx_destroy();
-    udp_tx_destroy();
-    user_display_destroy();
+    stalk_Shutdown();
 
     printf("Finished Main\n");
     return(0);

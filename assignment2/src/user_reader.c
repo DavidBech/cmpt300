@@ -75,9 +75,11 @@ static void* user_reader_loop(void* arg){
         if(user_input[0] == '!' && user_input[1] == '\0'){
             // TODO -- send shutdown to other stalk process
             // TODO -- move into udp tx to ensure the message is sent
+            txList_addLast(user_input);
             stalk_initiateShutdown();
         } else {
             // append message to list
+            // TODO message too large, potentially send multiple packets?
             if(txList_addFirst(user_input)){
                 // TODO ERROR HANDLING
             }
