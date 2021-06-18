@@ -1,4 +1,7 @@
 #include <pthread.h>
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "stalk.h"
 #include "user_reader.h"
@@ -9,7 +12,22 @@
 static pthread_cond_t shutdown_cond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t shutdown_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+#ifdef DEBUG
+    // Get the start time of stalk process used in logging messages
+    static struct tm start_time;
+    // Should be called before the process is made this is not thread safe
+    struct tm get_start_time(){
+        return start_time;
+    }
+#endif
+
 void stalk_initialize(char **argv){
+    #ifdef DEBUG
+        // Setup the start time of stalk
+        time_t time_temp;
+        time(&time_temp);
+        start_time = *localtime(&time_temp);
+    #endif
     udp_rx_init(argv[1]);
     udp_tx_init(argv[2], argv[3]);
     user_display_init();

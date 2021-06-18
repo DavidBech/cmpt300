@@ -1,6 +1,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "user_reader.h"
 #include "list.h"
@@ -22,8 +24,46 @@ static bool txList_addFirst(char* msg);
 
 static pthread_t user_reader_pid;
 static List* tx_list;
+// TODO need to handle memory allocation leeks
+static char* user_input;
+
+
+#ifdef DEBUG
+    // Variables for debugging purposes, unused otherwise
+    // Log file to print log messages to
+    static char* reader_log_file_name = "./log/reader_log.log";
+    static FILE* reader_log;
+    // Start time fetched in init function
+    static struct tm reader_start_time;
+    // gets the current time relative to the start time
+    static struct tm reader_current_time(){
+        time_t time_temp;
+        time(&time_temp);
+        struct tm time_now = *localtime(&time_temp);
+        // only minutes and seconds are used for printout
+        time_now.tm_min -= reader_start_time.tm_min;
+        time_now.tm_sec -= reader_start_time.tm_sec;
+        return time_now;
+    }
+    #define READER_LOG(_message) STALK_LOG(reader_log, _message, reader_current_time())
+#else
+    #define READER_LOG(_message) ;
+#endif
+
 
 void user_reader_init(){
+    // Open log file if debugging is active
+    #ifdef DEBUG
+        // fetch start time, bust be done before thread as not threadsafe
+        reader_start_time = get_start_time();
+        // Open log file
+        reader_log = fopen(reader_log_file_name, "w");
+        if(reader_log == NULL){
+            fprintf(stderr, "Invalid File name %s, %i", __FILE__, __LINE__);
+            exit(EXIT_FAILURE);
+        }
+    #endif
+
     tx_list = List_create();
     if(tx_list == NULL){
         // TODO failure
@@ -36,9 +76,15 @@ void user_reader_destroy(){
     // Stops the thread
     pthread_cancel(user_reader_pid);
     
+    #ifdef DEBUG
+        // close logging file
+        fclose(reader_log);
+    #endif
+
     // free allocated memory
     //List_free(tx_list, TODO FREE FUNCTION );
     //FREE BUFFER?
+    free(user_input);
 
     // Waits until thread finishes before continuing 
     pthread_join(user_reader_pid, NULL);
@@ -64,28 +110,39 @@ static bool txList_addFirst(char* msg){
 static void* user_reader_loop(void* arg){
     // TODO - read user input puting messages onto a List
     printf("Started User Reader\n");
+    // used to ensure fgets didn't fail
+    char* readerReturn = NULL;
     while(1){
+        // TODO ALLOCATE MEMORY here?
+        user_input = malloc(MAX_MESSAGE_SIZE);
         // TODO ALLOCATE MEMORY?
-        char user_input[MAX_MESSAGE_SIZE];
-        printf("Input '!' To End Program:\n");
-        // TODO, don't use scanf change to fgets
-        scanf("%s", user_input);
 
-        // Case for termination -- TODO doesn't work for '! ' as input
-        if(user_input[0] == '!' && user_input[1] == '\0'){
+        
+        printf("Input '!' To End Program:\n");
+        // Get user input
+        // TODO message too large, potentially send multiple packets?
+        readerReturn = fgets(user_input, MAX_MESSAGE_SIZE, stdin);
+        // TODO readerReturn == NULL ERROR HANDLING?
+        if(readerReturn == NULL){
+            // TODO ERROR
+        }
+
+        READER_LOG(user_input);
+        if(strcmp(user_input, "!\n\0") == 0){
             // TODO -- send shutdown to other stalk process
             // TODO -- move into udp tx to ensure the message is sent
             txList_addLast(user_input);
             stalk_initiateShutdown();
         } else {
             // append message to list
-            // TODO message too large, potentially send multiple packets?
+            
             if(txList_addFirst(user_input)){
                 // TODO ERROR HANDLING
             }
-            // TODO ALLOCATE MEMORY?
+            
         }
-        
+        // TODO THIS FREE SHOULDN'T BE HERE
+        free(user_input);
     }
     return NULL;
 }
