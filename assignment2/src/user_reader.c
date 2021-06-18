@@ -108,6 +108,7 @@ static bool txList_addFirst(char* msg){
 }
 
 static void* user_reader_loop(void* arg){
+    READER_LOG("Started Reader Loop\n");
     // TODO - read user input puting messages onto a List
     printf("Started User Reader\n");
     // used to ensure fgets didn't fail
