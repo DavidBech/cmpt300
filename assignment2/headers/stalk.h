@@ -4,7 +4,7 @@
 #ifdef DEBUG
     #include <time.h>
     struct tm get_start_time();
-    #define STALK_LOG(_fd, _message, _time) fprintf(_fd, "%im:%is: %s, Line:%i, %s", _time.tm_min, _time.tm_sec, __FILE__, __LINE__, _message)
+    #define STALK_LOG(_fd, _message, _time) fprintf(_fd, "%im:%is: %s, Line:%i, %s", _time.tm_min, _time.tm_sec, __FILE__, __LINE__, _message); fflush(_fd);
 #else
     #define STALK_LOG(_fd, _message) ;
 #endif
