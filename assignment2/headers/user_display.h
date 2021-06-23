@@ -9,9 +9,14 @@ void user_display_init(void);
 // Kills the thread and cleans up
 void user_display_destroy(void);
 
-// Gets the next tx list item
-//  msg: pointer to message retrieved from list
+// Adds an item to the rxList 
+//  msg: pointer to message to add to list
 //  returns 0 on success and 1 on failure
 bool user_display_rxList_add(char* msg);
+
+// Allocates memory for new message to add to rxList
+//  msg: output pointer to new allocated memory
+//  returns 0 on success and 1 onfailure
+bool user_display_allocate_message(char* msg);
 
 #endif

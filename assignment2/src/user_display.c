@@ -10,14 +10,25 @@
 // Loop that thread runs till cancled
 static void* user_display_loop(void* arg);
 
-// Gets the next meessage in the rx list
-//  msg: pointer to message to output
+// Gets the next message in the rx list
+//  msg: pointer to message to output should be NULL on input
 //  returns 0 on success and 1 on failure
 static bool user_display_rxList_getNext(char* msg);
 
+// Function used to free allocated memory
+static void free_message(void* msg);
+
+// Process Id, used for join and cancel
 static pthread_t user_display_pid;
 
-List* rx_list = NULL;
+// Condition and Mutex Variables for access to rx list
+static pthread_cond_t rx_list_cond = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t rx_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// List for incoming messages
+static List* rx_list = NULL;
+// Pointer for messages retrieved from list
+static char* message = NULL;
 
 #ifdef DEBUG
     // Variables for debugging purposes, unused otherwise
@@ -57,7 +68,6 @@ void user_display_init(){
     // create the rx list
     rx_list = List_create();
 
-    // TODO - Create UPD socket and bind it to the port
     pthread_create(&user_display_pid, NULL, user_display_loop, NULL);
 }
 
@@ -65,8 +75,9 @@ void user_display_destroy(){
     // Stops the thread
     pthread_cancel(user_display_pid);
 
-    // TODO FREE LIST
-    // TODO FREE MEMEORY
+    free_message(message);
+    List_free(rx_list, free_message);
+
     #ifdef DEBUG
         // close logging file
         fclose(display_log);
@@ -78,27 +89,79 @@ void user_display_destroy(){
 }
 
 bool user_display_rxList_add(char* msg){
-    //TODO
-    return true;
+    bool status = 0;
+    // Lock mutex for access to rx_list
+    pthread_mutex_lock(&rx_list_mutex);
+    {  
+        // Append Message to list
+        if(List_prepend(rx_list, (void*)msg) == LIST_FAIL){
+            DISPLAY_LOG("ERROR: failed adding message to list \n");
+            // TODO ERROR HANDLING
+            status = 1;
+        } else {  
+            pthread_cond_signal(&rx_list_cond);
+        }
+    }
+    pthread_mutex_unlock(&rx_list_mutex);
+
+    return status;
+}
+
+bool user_display_allocate_message(char* msg){
+    msg = malloc(MAX_MESSAGE_SIZE*sizeof(char));
+    if(msg == NULL){
+        DISPLAY_LOG("ERROR: malloc returned NULL\n");
+        // TODO error handling
+        return 1;
+    }
+    return 0;
+}
+
+static void free_message(void* msg){
+    free(msg);
+    msg = NULL;
 }
 
 static bool user_display_rxList_getNext(char* msg){
-    //TODO
-    return true;
+    msg = NULL;
+
+    // Attempt to access List lock access or wait for access
+    pthread_mutex_lock(&rx_list_mutex);
+    {  
+        // Check if list is empty
+        if(List_count(rx_list) == 0){
+            DISPLAY_LOG("Wating for Item on List\n");     
+            // Wait for Item on list TODO ensure after an 
+            //  item is added to list this cond is signaled
+            pthread_cond_wait(&rx_list_cond, &rx_list_mutex);
+        } 
+        DISPLAY_LOG("Retrieving Item from List\n");
+        msg = (char*)List_trim(rx_list);
+    }
+    pthread_mutex_unlock(&rx_list_mutex);
+
+    if (msg == NULL){
+        DISPLAY_LOG("ERROR: Item Retrieved is NULL\n");
+        // Return with error
+        return true;
+    }      
+    // Return without error
+    return false;
 }
 
 static void* user_display_loop(void* arg){
-    printf("Started User Display\n");
     DISPLAY_LOG("Started Display Loop\n");
-    char* message = NULL;
-    // TODO - wait for rx_list to have messages to display to screen
     while(1){
         pthread_testcancel();
         if(user_display_rxList_getNext(message)){
+            DISPLAY_LOG("ERROR: returning from rxList_getNext\n");
             // TODO ERROR HANDLING
         }
-        // TODO DISPLAY MESSAGE
-        // TODO FREE MESSAGE
+        if(fputs(message, stdout) == EOF){
+            DISPLAY_LOG("ERROR: fputs returned error\n");
+            // TODO fputs Error
+        }
+        free_message(message);
     }
     return NULL;
 }
