@@ -95,7 +95,6 @@ bool user_display_rxList_add(char* msg){
     {  
         // Append Message to list
         if(List_prepend(rx_list, (void*)msg) == LIST_FAIL){
-            DISPLAY_LOG("ERROR: failed adding message to list \n");
             // TODO ERROR HANDLING
             status = 1;
         } else {  
@@ -110,7 +109,6 @@ bool user_display_rxList_add(char* msg){
 bool user_display_allocate_message(char* msg){
     msg = malloc(MAX_MESSAGE_SIZE*sizeof(char));
     if(msg == NULL){
-        DISPLAY_LOG("ERROR: malloc returned NULL\n");
         // TODO error handling
         return 1;
     }
