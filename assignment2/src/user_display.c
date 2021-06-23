@@ -100,6 +100,7 @@ bool user_display_rxList_add(char* msg){
             // TODO ERROR HANDLING
             status = 1;
         } else {  
+            // Signal User Display that an item is on list
             pthread_cond_signal(&rx_list_cond);
         }
     }
@@ -120,8 +121,7 @@ static bool user_display_rxList_getNext(char** msg){
         // Check if list is empty
         if(List_count(rx_list) == 0){
             DISPLAY_LOG("Wating for Item on List\n");     
-            // Wait for Item on list TODO ensure after an 
-            //  item is added to list this cond is signaled
+            // Wait for Item on list 
             pthread_cond_wait(&rx_list_cond, &rx_list_mutex);
         } 
         DISPLAY_LOG("Retrieving Item from List\n");
