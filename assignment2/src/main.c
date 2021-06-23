@@ -1,13 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h> 
 
 #include "stalk.h"
-#include "list.h"
-#include "user_display.h"
-#include "user_reader.h"
-#include "udp_rx.h"
-#include "udp_tx.h"
 
 int main(int argc, char** argv){
     // Ensure there is the correct amount of arguments
