@@ -71,7 +71,6 @@ void udp_tx_destroy(){
     printf("Fished UPD Transmitor\n");
 }
 
-
 static void* upd_transmit_loop(void* arg){
     printf("Started UPD Transmitor\n");
     UDP_TX_LOG("Started UDP TX Loop\n");

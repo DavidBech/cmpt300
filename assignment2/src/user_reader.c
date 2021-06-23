@@ -23,10 +23,9 @@ static bool txList_addLast(char* msg);
 static bool txList_addFirst(char* msg);
 
 static pthread_t user_reader_pid;
-static List* tx_list;
+static List* tx_list = NULL;
 // TODO need to handle memory allocation leeks
 static char* user_input;
-
 
 #ifdef DEBUG
     // Variables for debugging purposes, unused otherwise
@@ -49,7 +48,6 @@ static char* user_input;
 #else
     #define READER_LOG(_message) ;
 #endif
-
 
 void user_reader_init(){
     // Open log file if debugging is active
@@ -90,7 +88,6 @@ void user_reader_destroy(){
     pthread_join(user_reader_pid, NULL);
     printf("Finished User Reader\n");
 }
-
 
 bool user_reader_txList_getNext(char* msg){
     // TODO

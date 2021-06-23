@@ -11,8 +11,7 @@
 static void* user_display_loop(void* arg);
 
 // Gets the next meessage in the rx list
-//  effectivly bypassing other messages on the list
-//  msg: pointer to message to append to list
+//  msg: pointer to message to output
 //  returns 0 on success and 1 on failure
 static bool user_display_rxList_getNext(char* msg);
 
