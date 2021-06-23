@@ -5,13 +5,17 @@
 #include <pthread.h> 
 #include <string.h>
 #include <time.h>
+#include <errno.h>
 
 #include "udp_rx.h"
 #include "list.h"
 #include "stalk.h"
+#include "user_display.h"
 
 // Loop that thread runs till cancled
 static void* upd_recieve_loop(void* arg);
+
+static char* messageRx = NULL;
 
 static pthread_t upd_rx_pid;
 
@@ -70,10 +74,17 @@ void udp_rx_init(char* rx_port){
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = htonl(INADDR_ANY); // Address
     sin.sin_port = htons(port);              // Port Watching
+    // TODO INVALID PORT?
+    // TODO get host name?
 
     // Create the socket
     rx_socket_desc = socket(PF_INET, SOCK_DGRAM, 0);
+    if(rx_socket_desc == -1){
+        UDP_RX_LOG("ERROR: invalid socket descriptor\n");
+        //TODO
+    }
     // Bind socket to port specified
+    // TODO BIND CAN FAIL?
     bind(rx_socket_desc, (struct sockaddr *) &sin, sizeof(struct sockaddr_in));
 
     pthread_create(&upd_rx_pid, NULL, upd_recieve_loop, NULL);
@@ -96,29 +107,37 @@ void udp_rx_destroy(){
 }
 
 static void* upd_recieve_loop(void* arg){
-    printf("Started UPD Receiver\n");
     UDP_RX_LOG("Started UDP RX Loop\n");
-    // TODO - coninually read upd socket adding recieved messages to rx_list
-    //  currently waits for messages and prints them itself should put them on list
     while(1){
         struct sockaddr_in sinRemote;
         unsigned int sin_len = sizeof(sinRemote);
-        char messageRx[MAX_MESSAGE_SIZE];
-        printf("Waiting for message\n");
+        messageRx = malloc(MAX_MESSAGE_SIZE);
+        UDP_RX_LOG("Waiting for message\n");
         // blocking call to receive message
         int bytesRx = recvfrom(rx_socket_desc, messageRx, MAX_MESSAGE_SIZE, 0, (struct sockaddr *) &sinRemote, &sin_len);
-        
-        // prints out message
+        if(bytesRx == 0){
+            UDP_RX_LOG("ERROR: Recieved 0 bytes\n");
+            // TODO 
+        }
         if(bytesRx == -1){
-            fprintf(stderr, "ERROR RECIEVING MESSAGE\n");
-            exit(EXIT_FAILURE);
+            UDP_RX_LOG("ERROR: Recieved Invallid Message\n");
+            // TODO: error recieving message
         } else {
+            UDP_RX_LOG("Message Recieved\n");
             int term_null = (bytesRx < MAX_MESSAGE_SIZE) ? bytesRx : MAX_MESSAGE_SIZE -1;
             messageRx[term_null] = '\0';
-            printf("Message recieved %d Bytes: |%s|\n", bytesRx, messageRx);
+            if(strcmp(messageRx, "!\n\0") == 0){
+                UDP_RX_LOG("Recieved Termination Message\n");
+                stalk_initiateShutdown();
+                return NULL;
+            }
+            else if(user_display_rxList_add(messageRx)){
+                UDP_RX_LOG("ERROR: Adding Message to list\n");
+                // TODO: error
+            }
+            UDP_RX_LOG("Message Added to List\n");
         }
         
     }
-    printf("should never happen\n");
     return NULL;
 }

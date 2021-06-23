@@ -13,7 +13,7 @@ static void* user_display_loop(void* arg);
 // Gets the next message in the rx list
 //  msg: pointer to message to output should be NULL on input
 //  returns 0 on success and 1 on failure
-static bool user_display_rxList_getNext(char* msg);
+static bool user_display_rxList_getNext(char** msg);
 
 // Function used to free allocated memory
 static void free_message(void* msg);
@@ -74,8 +74,10 @@ void user_display_init(){
 void user_display_destroy(){
     // Stops the thread
     pthread_cancel(user_display_pid);
-
-    free_message(message);
+    
+    if(message){
+        free_message(message);
+    }
     List_free(rx_list, free_message);
 
     #ifdef DEBUG
@@ -106,23 +108,12 @@ bool user_display_rxList_add(char* msg){
     return status;
 }
 
-bool user_display_allocate_message(char* msg){
-    msg = malloc(MAX_MESSAGE_SIZE*sizeof(char));
-    if(msg == NULL){
-        // TODO error handling
-        return 1;
-    }
-    return 0;
-}
-
 static void free_message(void* msg){
     free(msg);
     msg = NULL;
 }
 
-static bool user_display_rxList_getNext(char* msg){
-    msg = NULL;
-
+static bool user_display_rxList_getNext(char** msg){
     // Attempt to access List lock access or wait for access
     pthread_mutex_lock(&rx_list_mutex);
     {  
@@ -134,7 +125,7 @@ static bool user_display_rxList_getNext(char* msg){
             pthread_cond_wait(&rx_list_cond, &rx_list_mutex);
         } 
         DISPLAY_LOG("Retrieving Item from List\n");
-        msg = (char*)List_trim(rx_list);
+        *msg = (char*)List_trim(rx_list);
     }
     pthread_mutex_unlock(&rx_list_mutex);
 
@@ -150,8 +141,7 @@ static bool user_display_rxList_getNext(char* msg){
 static void* user_display_loop(void* arg){
     DISPLAY_LOG("Started Display Loop\n");
     while(1){
-        pthread_testcancel();
-        if(user_display_rxList_getNext(message)){
+        if(user_display_rxList_getNext(&message)){
             DISPLAY_LOG("ERROR: returning from rxList_getNext\n");
             // TODO ERROR HANDLING
         }
