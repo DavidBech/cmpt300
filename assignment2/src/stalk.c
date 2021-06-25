@@ -28,10 +28,10 @@ void stalk_initialize(char **argv){
         time(&time_temp);
         start_time = *localtime(&time_temp);
     #endif
-    udp_rx_init(argv[1]);
-    udp_tx_init(argv[2], argv[3]);
-    user_display_init();
     user_reader_init();
+    udp_tx_init(argv[2], argv[3]);
+    udp_rx_init(argv[1]);
+    user_display_init();
 }
 
 void stalk_waitForShutdown(){

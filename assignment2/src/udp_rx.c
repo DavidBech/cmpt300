@@ -13,11 +13,11 @@
 #include "user_display.h"
 
 // Loop that thread runs till cancled
-static void* upd_recieve_loop(void* arg);
+static void* udp_recieve_loop(void* arg);
 
 static char* messageRx = NULL;
 
-static pthread_t upd_rx_pid;
+static pthread_t udp_rx_pid;
 
 // Socket recieving UDP packets on
 static int rx_socket_desc;
@@ -67,7 +67,7 @@ void udp_rx_init(char* rx_port){
     if(port == 0){
         fprintf(stderr, "Error in RX port number: %s\n", rx_port);
     }
-    printf("Receiving Data through UDP on port %d\n", port);
+    printf("Receiving Data through UDP on port: %d\n", port);
        // Setup Address
     struct sockaddr_in sin;
     memset(&sin, 0, sizeof(sin));
@@ -80,19 +80,19 @@ void udp_rx_init(char* rx_port){
     // Create the socket
     rx_socket_desc = socket(PF_INET, SOCK_DGRAM, 0);
     if(rx_socket_desc == -1){
-        UDP_RX_LOG("ERROR: invalid socket descriptor\n");
+        UDP_RX_LOG("ERROR: invalid socket descriptor in udp_rx\n");
         //TODO
     }
     // Bind socket to port specified
     // TODO BIND CAN FAIL?
     bind(rx_socket_desc, (struct sockaddr *) &sin, sizeof(struct sockaddr_in));
 
-    pthread_create(&upd_rx_pid, NULL, upd_recieve_loop, NULL);
+    pthread_create(&udp_rx_pid, NULL, udp_recieve_loop, NULL);
 }
 
 void udp_rx_destroy(){
     // Stops the thread
-    pthread_cancel(upd_rx_pid);
+    pthread_cancel(udp_rx_pid);
     
     #ifdef DEBUG
         // close logging file
@@ -102,11 +102,12 @@ void udp_rx_destroy(){
     close(rx_socket_desc);
 
     // Waits until thread finishes before continuing 
-    pthread_join(upd_rx_pid, NULL);
+    pthread_join(udp_rx_pid, NULL);
     printf("Fished UPD Receiver\n");
 }
 
-static void* upd_recieve_loop(void* arg){
+static void* udp_recieve_loop(void* arg){
+    printf("Started UDP Transmitor on UDP_RX\n");
     UDP_RX_LOG("Started UDP RX Loop\n");
     while(1){
         struct sockaddr_in sinRemote;
@@ -114,15 +115,19 @@ static void* upd_recieve_loop(void* arg){
         messageRx = malloc(MAX_MESSAGE_SIZE);
         UDP_RX_LOG("Waiting for message\n");
         // blocking call to receive message
+        printf("In UDP_RX 1\n");
         int bytesRx = recvfrom(rx_socket_desc, messageRx, MAX_MESSAGE_SIZE, 0, (struct sockaddr *) &sinRemote, &sin_len);
+        printf("In UDP_RX 2\n");
         if(bytesRx == 0){
             UDP_RX_LOG("ERROR: Recieved 0 bytes\n");
             // TODO 
         }
-        if(bytesRx == -1){
-            UDP_RX_LOG("ERROR: Recieved Invallid Message\n");
+        else if(bytesRx == -1){
+            UDP_RX_LOG("ERROR: Recieved Invalid Message\n");
             // TODO: error recieving message
-        } else {
+        } 
+        else 
+        {
             UDP_RX_LOG("Message Recieved\n");
             int term_null = (bytesRx < MAX_MESSAGE_SIZE) ? bytesRx : MAX_MESSAGE_SIZE -1;
             messageRx[term_null] = '\0';
@@ -137,7 +142,6 @@ static void* upd_recieve_loop(void* arg){
             }
             UDP_RX_LOG("Message Added to List\n");
         }
-        
     }
     return NULL;
 }

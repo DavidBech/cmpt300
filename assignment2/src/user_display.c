@@ -2,12 +2,11 @@
 #include <pthread.h>
 #include <time.h>
 #include <stdlib.h>
-
 #include "user_display.h"
 #include "list.h"
 #include "stalk.h"
 
-// Loop that thread runs till cancled
+// Loop that thread runs till canceled
 static void* user_display_loop(void* arg);
 
 // Gets the next message in the rx list
@@ -119,8 +118,8 @@ static bool user_display_rxList_getNext(char** msg){
     pthread_mutex_lock(&rx_list_mutex);
     {  
         // Check if list is empty
-        if(List_count(rx_list) == 0){
-            DISPLAY_LOG("Wating for Item on List\n");     
+        if(List_count(rx_list) == 0){ 
+            DISPLAY_LOG("Wating for Item on List for output on screen.\n");     
             // Wait for Item on list 
             pthread_cond_wait(&rx_list_cond, &rx_list_mutex);
         } 
@@ -138,9 +137,12 @@ static bool user_display_rxList_getNext(char** msg){
     return false;
 }
 
-static void* user_display_loop(void* arg){
+static void* user_display_loop(void* arg)
+{
     DISPLAY_LOG("Started Display Loop\n");
+    printf("Started User Display\n");
     while(1){
+        printf("What if I am here!\n");
         if(user_display_rxList_getNext(&message)){
             DISPLAY_LOG("ERROR: returning from rxList_getNext\n");
             // TODO ERROR HANDLING

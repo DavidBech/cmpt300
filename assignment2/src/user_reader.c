@@ -25,7 +25,10 @@ static bool txList_addFirst(char* msg);
 static pthread_t user_reader_pid;
 static List* tx_list = NULL;
 // TODO need to handle memory allocation leeks
-static char* user_input;
+static char* user_input = NULL;
+
+pthread_cond_t tx_list_cond = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t tx_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #ifdef DEBUG
     // Variables for debugging purposes, unused otherwise
@@ -65,6 +68,7 @@ void user_reader_init(){
     tx_list = List_create();
     if(tx_list == NULL){
         // TODO failure
+        READER_LOG("ERROR: You have now exceeded the total messages that you can have on the list at a time.\n");
     }
 
     pthread_create(&user_reader_pid, NULL, user_reader_loop, NULL);
@@ -89,22 +93,68 @@ void user_reader_destroy(){
     printf("Finished User Reader\n");
 }
 
-bool user_reader_txList_getNext(char* msg){
+bool user_reader_txList_getNext(char** msg){
     // TODO
-    return true;
+    pthread_mutex_lock(&tx_list_mutex);
+    {
+        if (List_count(tx_list) == 0)
+        {
+            READER_LOG("Waiting for an item to be available on the list\n");
+            pthread_cond_wait(&tx_list_cond, &tx_list_mutex);
+        }
+        READER_LOG("Retrieving the message from the list for printing to the screen\n");
+        *msg = (char*)List_trim(tx_list);
+    }
+    pthread_mutex_unlock(&tx_list_mutex);
+    
+    if (*msg == NULL)
+    {
+        READER_LOG("ERROR: The item retrieved from the list is NULL\n");
+        return true;
+    }
+    return false;
 }
 
 static bool txList_addLast(char* msg){
-    // TODO
-    return true;
+    bool status = 0;
+    pthread_mutex_lock(&tx_list_mutex);
+    {
+        if (List_append(tx_list, (void*)msg) == LIST_FAIL)
+        {
+            // TODO: ERROR HANDLING
+            status = 1;
+        }
+        else
+        {
+            // Signalling that the exclamation mark has now been appended onto the list
+            pthread_cond_signal(&tx_list_cond);
+        }
+    }
+    pthread_mutex_unlock(&tx_list_mutex);
+    return status;
 }
 
 static bool txList_addFirst(char* msg){
-    // TODO 
-    return true;
+    bool status = 0;
+    pthread_mutex_lock(&tx_list_mutex);
+    {
+        if (List_prepend(tx_list, (void*)msg) == LIST_FAIL)
+        {
+            // TODO: ERROR HANDLING
+            status = 1;
+        }
+        else
+        {
+            // Signalling that the exclamation mark has now been appended onto the list
+            pthread_cond_signal(&tx_list_cond);
+        }
+    }
+    pthread_mutex_unlock(&tx_list_mutex);
+    return status;
 }
 
-static void* user_reader_loop(void* arg){
+static void* user_reader_loop(void* arg)
+{
     READER_LOG("Started Reader Loop\n");
     // TODO - read user input puting messages onto a List
     printf("Started User Reader\n");
@@ -114,33 +164,41 @@ static void* user_reader_loop(void* arg){
         // TODO ALLOCATE MEMORY here?
         user_input = malloc(MAX_MESSAGE_SIZE);
         // TODO ALLOCATE MEMORY?
-
-        
-        printf("Input '!' To End Program:\n");
+       
+        printf("Input '!' and then hit the Enter Key To End Program:\n");
         // Get user input
         // TODO message too large, potentially send multiple packets?
-        readerReturn = fgets(user_input, MAX_MESSAGE_SIZE, stdin);
+        readerReturn = fgets(user_input, MAX_MESSAGE_SIZE - 1, stdin);
+        
         // TODO readerReturn == NULL ERROR HANDLING?
         if(readerReturn == NULL){
             // TODO ERROR
+            READER_LOG("ERROR: No characters have been read. Please, input again\n");
         }
 
-        READER_LOG(user_input);
-        if(strcmp(user_input, "!\n\0") == 0){
+        char output[] = "The input sent successfully is: ";
+        strcat(output, user_input);
+        READER_LOG(output);
+
+        if(strcmp(user_input, "!\n\0") == 0)
+        {
             // TODO -- send shutdown to other stalk process
             // TODO -- move into udp tx to ensure the message is sent
             txList_addLast(user_input);
-            stalk_initiateShutdown();
-        } else {
+            // I changed here to stalk_waitforshutdown() as opposed to stalk_initiateShutdown()
+            stalk_waitForShutdown();
+        } 
+        else 
+        {
             // append message to list
-            
             if(txList_addFirst(user_input)){
                 // TODO ERROR HANDLING
+                READER_LOG("ERROR: The message has not been added to the list. Please, try again.\n");
             }
-            
         }
         // TODO THIS FREE SHOULDN'T BE HERE
-        free(user_input);
+        // free(user_input);
+        printf("Here is now an output\n");
     }
     return NULL;
 }

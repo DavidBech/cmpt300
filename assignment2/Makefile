@@ -2,7 +2,7 @@
 PROGNAME := s-talk
 
 INC_P = 42069
-OUT_M = "Out_Machine_Name"
+OUT_M = "localhost"
 OUT_P = 69420
 
 RM := rm -f

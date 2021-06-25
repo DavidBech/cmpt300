@@ -13,6 +13,6 @@ void user_reader_destroy(void);
 // Gets the next tx list item
 //  msg: pointer to message retrieved from list
 //  returns 0 on success and 1 on failure
-bool user_reader_txList_getNext(char* msg);
+bool user_reader_txList_getNext(char** msg);
 
 #endif

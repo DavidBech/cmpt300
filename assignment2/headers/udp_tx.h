@@ -9,6 +9,6 @@ void udp_tx_init(char* tx_machine, char* tx_port);
 // Kills the thread and cleans up
 void udp_tx_destroy(void);
 
-bool udp_tx_addtoList(char* message);
+//bool udp_tx_addtoList(char* message);
 
 #endif
