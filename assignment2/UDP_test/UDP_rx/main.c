@@ -25,25 +25,21 @@ int main(){
     // Create the socket
     int socketDesc = socket(PF_INET, SOCK_DGRAM, 0);
     // Bind socket to port specified
-    bind(socketDesc, (struct sockaddr *) &sin, sizeof(sin));
+    bind(socketDesc, (struct sockaddr *) &sin, sizeof(struct sockaddr_in));
 
     while(1){
         struct sockaddr_in sinRemote;
         unsigned int sin_len = sizeof(sinRemote);
         char messageRx[MSG_MAX_LEN];
-        printf("Waiting for message...\n");
+        printf("Waiting for message\n");
         int bytesRx = recvfrom(socketDesc, messageRx, MSG_MAX_LEN, 0, (struct sockaddr *) &sinRemote, &sin_len);
-        int term_null = (bytesRx < MSG_MAX_LEN) ? bytesRx : MSG_MAX_LEN - 1;
+        int term_null = (bytesRx < MSG_MAX_LEN) ? bytesRx : MSG_MAX_LEN -1;
         messageRx[term_null] = '\0';
-        printf("Message recieved %d Bytes: %s\n", bytesRx, messageRx);
-        // printf("Sending a message back to it's original sender...\n");
-
-        // bzero(messageRx, MSG_MAX_LEN);
-        // fgets(messageRx, MSG_MAX_LEN - 1, stdin);
-        // sendto(socketDesc, &messageRx, MSG_MAX_LEN, 0, (struct sockaddr *) &sinRemote, sizeof(sinRemote));
+        
+        printf("Message recieved %d Bytes: |%s|\n", bytesRx, messageRx);
     }
+    // sendto(socket, &msg, len, 0, (struct sockaddr *)&remote, sizeof(struct sockaddr_in));
 
     close(socketDesc);
     return(0);
 }
-
