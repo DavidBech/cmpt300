@@ -86,7 +86,7 @@ void user_display_destroy(){
 
     // Waits until thread finishes before continuing 
     pthread_join(user_display_pid, NULL);
-    printf("Finished User Display\n");
+    //printf("Finished User Display\n");
 }
 
 bool user_display_rxList_add(char* msg){
@@ -140,9 +140,8 @@ static bool user_display_rxList_getNext(char** msg){
 static void* user_display_loop(void* arg)
 {
     DISPLAY_LOG("Started Display Loop\n");
-    printf("Started User Display\n");
+    //printf("Started User Display\n");
     while(1){
-        printf("What if I am here!\n");
         if(user_display_rxList_getNext(&message)){
             DISPLAY_LOG("ERROR: returning from rxList_getNext\n");
             // TODO ERROR HANDLING
@@ -151,6 +150,8 @@ static void* user_display_loop(void* arg)
             DISPLAY_LOG("ERROR: fputs returned error\n");
             // TODO fputs Error
         }
+        fflush(stdout);
+        DISPLAY_LOG("Output message\n");
         free_message(message);
     }
     return NULL;

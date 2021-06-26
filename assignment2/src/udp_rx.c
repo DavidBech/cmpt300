@@ -67,7 +67,7 @@ void udp_rx_init(char* rx_port){
     if(port == 0){
         fprintf(stderr, "Error in RX port number: %s\n", rx_port);
     }
-    printf("Receiving Data through UDP on port: %d\n", port);
+    printf("Receiving Data on port: %d\n", port);
        // Setup Address
     struct sockaddr_in sin;
     memset(&sin, 0, sizeof(sin));
@@ -103,21 +103,18 @@ void udp_rx_destroy(){
 
     // Waits until thread finishes before continuing 
     pthread_join(udp_rx_pid, NULL);
-    printf("Fished UPD Receiver\n");
+    //printf("Fished UPD Receiver\n");
 }
 
 static void* udp_recieve_loop(void* arg){
     printf("Started UDP Transmitor on UDP_RX\n");
     UDP_RX_LOG("Started UDP RX Loop\n");
     while(1){
-        struct sockaddr_in sinRemote;
-        unsigned int sin_len = sizeof(sinRemote);
         messageRx = malloc(MAX_MESSAGE_SIZE);
         UDP_RX_LOG("Waiting for message\n");
         // blocking call to receive message
-        printf("In UDP_RX 1\n");
-        int bytesRx = recvfrom(rx_socket_desc, messageRx, MAX_MESSAGE_SIZE, 0, (struct sockaddr *) &sinRemote, &sin_len);
-        printf("In UDP_RX 2\n");
+        int bytesRx = recv(rx_socket_desc, messageRx, MAX_MESSAGE_SIZE, 0);
+        printf("Recieved Message: %s", messageRx);
         if(bytesRx == 0){
             UDP_RX_LOG("ERROR: Recieved 0 bytes\n");
             // TODO 

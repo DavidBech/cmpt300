@@ -58,7 +58,6 @@ void udp_tx_init(char* tx_machine, char* tx_port){
             exit(EXIT_FAILURE);
         }
     #endif
-    // TODO - Create UPD socket and bind it to the port
     
     // We begin by retrieving the port from the input to our function
     char* tempPtr;
@@ -67,72 +66,23 @@ void udp_tx_init(char* tx_machine, char* tx_port){
     {
         fprintf(stderr, "Error in TX port number: %s", tx_port);
     }
-    printf("Sending Data through UDP on port: %s\n", tx_port);
+    //printf("Sending Data through UDP on port: %s\n", tx_port);
 
-    // We continue by using the getaddrinfo function to connect the hostname to an 
-    // IP address
-    // struct addrinfo hints;
-    // struct addrinfo *result, *temp;
-    struct hostent* ht;
-    // int sockfd;
-
-    // memset(&hints, 0, sizeof(struct addrinfo));
-    // hints.ai_family = AF_INET;
-    // hints.ai_socktype = SOCK_DGRAM;
-    // // I can also test removing the two lines below
-    // hints.ai_flags = 0;
-    // hints.ai_protocol = 0;
-
-    // printf("Okay, here\n");
-
-    ht = gethostbyname(tx_machine);
-
-    if (ht == 0)
-    {
-        printf("Unknown Host\n");
-    }
-
-    bcopy((char *)ht->h_addr, (char*)&sin.sin_addr, ht->h_length);
-
-    // int value = getaddrinfo(tx_machine, tx_port, &hints, &result);
-    // if (value != 0)
-    // {
-    //     fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(value));
-    //     exit(EXIT_FAILURE);
-    // }
-
-    // // Try each address structures until one of it is successful 
-    // for (temp = result; temp != NULL; temp = temp->ai_next)
-    // {
-    //     sockfd = socket(temp->ai_family, temp->ai_socktype, temp->ai_protocol);
-
-    //     if (sockfd == -1) 
-    //         continue; 
-
-    //     if (connect(sockfd, temp->ai_addr, temp->ai_addrlen) != -1)
-    //         break; // Sucess in connecting 
-        
-    //     close(sockfd);
-    // }   
-
-    // if (temp == NULL) // No address succeeded in connecting 
-    // {
-    //     fprintf(stderr, "Could not establish a successful conection to the host provided\n");
-    //     exit(EXIT_FAILURE);
-    // }
-
-    // freeaddrinfo(result);
-
+    memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;
-    sin.sin_port = port;
+    sin.sin_addr.s_addr = htonl(INADDR_ANY); // Address
+    sin.sin_port = htons(port);
 
     // Creating the socket
     tx_socket_desc = socket(PF_INET, SOCK_DGRAM, 0);
+
     if (tx_socket_desc == -1)
     {
         UDP_TX_LOG("ERROR: invalid socket descriptor in udp_tx\n");
     }
-
+    // Bind socket to port specified
+    bind(tx_socket_desc, (struct sockaddr *) &sin, sizeof(struct sockaddr_in));
+    
     pthread_create(&upd_tx_pid, NULL, upd_transmit_loop, NULL);
 }
 
@@ -150,11 +100,11 @@ void udp_tx_destroy(){
 
     // Waits until thread finishes before continuing 
     pthread_join(upd_tx_pid, NULL);
-    printf("Fished UPD Transmitor\n");
+    //printf("Fished UPD Transmitor\n");
 }
 
 static void* upd_transmit_loop(void* arg){
-    printf("Started UDP Transmitor on UDP_TX\n");
+    //printf("Started UDP Transmitor on UDP_TX\n");
     UDP_TX_LOG("Started UDP TX Loop\n");
     // TODO - coninually wait for tx_list to have messages to send to other s-talk instance
     char* msg = NULL;
@@ -165,9 +115,8 @@ static void* upd_transmit_loop(void* arg){
             UDP_TX_LOG("ERROR: Cannot retrieve the next message from the list.\n");
             // TODO: ERROR HANDLING
         }
-
+        UDP_TX_LOG(msg);
         int bytesTx = sendto(tx_socket_desc, msg, MAX_MESSAGE_SIZE, 0, (struct sockaddr*) &sin, sizeof(struct sockaddr_in));
-
         if(bytesTx == 0){
             UDP_TX_LOG("ERROR: Sent 0 bytes \n");
             // TODO 
@@ -178,7 +127,7 @@ static void* upd_transmit_loop(void* arg){
         }
         else
         {
-            printf("First is here\n");
+            //printf("First is here\n");
             UDP_TX_LOG("Message Sent Successfully\n");  
             // Question: Why do we have to add each message to a list and then output 
             // the messages added to the list for the assignment?

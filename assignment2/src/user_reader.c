@@ -90,7 +90,7 @@ void user_reader_destroy(){
 
     // Waits until thread finishes before continuing 
     pthread_join(user_reader_pid, NULL);
-    printf("Finished User Reader\n");
+    //printf("Finished User Reader\n");
 }
 
 bool user_reader_txList_getNext(char** msg){
@@ -157,7 +157,7 @@ static void* user_reader_loop(void* arg)
 {
     READER_LOG("Started Reader Loop\n");
     // TODO - read user input puting messages onto a List
-    printf("Started User Reader\n");
+    //printf("Started User Reader\n");
     // used to ensure fgets didn't fail
     char* readerReturn = NULL;
     while(1){
@@ -165,7 +165,7 @@ static void* user_reader_loop(void* arg)
         user_input = malloc(MAX_MESSAGE_SIZE);
         // TODO ALLOCATE MEMORY?
        
-        printf("Input '!' and then hit the Enter Key To End Program:\n");
+        //printf("Input '!' and then hit the Enter Key To End Program:\n");
         // Get user input
         // TODO message too large, potentially send multiple packets?
         readerReturn = fgets(user_input, MAX_MESSAGE_SIZE - 1, stdin);
@@ -198,7 +198,7 @@ static void* user_reader_loop(void* arg)
         }
         // TODO THIS FREE SHOULDN'T BE HERE
         // free(user_input);
-        printf("Here is now an output\n");
+       // printf("Here is now an output\n");
     }
     return NULL;
 }

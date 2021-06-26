@@ -22,6 +22,6 @@ int main(int argc, char** argv){
     // Clean up all threads
     stalk_Shutdown();
 
-    printf("Finished Main\n");
+    //printf("Finished Main\n");
     return(0);
 }

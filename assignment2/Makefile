@@ -1,39 +1,32 @@
-.PHONY: all, clean, run, valgrind, debug
+.PHONY: all, clean, run, valgrind
 PROGNAME := s-talk
 
-INC_P = 42069
-OUT_M = "localhost"
-OUT_P = 69420
+PORT1 = 12345
+MACHINE1 = "TOOD_MACHINE1"
+PORT2 = 69420
+MACHINE2 = "TOOD_MACHINE2"
 
 RM := rm -f
 SRC_DIR := src
 INC_DIR := headers
-OBJ_DIR := obj
-BIN_DIR := .
 
 local_CFLAGS := $(CFLAGS) -Wall -Werror -g -iquote $(INC_DIR)
 local_LFLAGS := $(LFLAGS) -pthread -lpthread
 
+all: $(PROGNAME) 
 
-SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
-INC_FILES = $(wildcard $(INC_DIR)/*.h)
-OBJ_FILES = $(SRC_FILES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-
-all: $(BIN_DIR)/$(PROGNAME) 
-
-$(BIN_DIR)/$(PROGNAME): $(OBJ_FILES)
-	gcc $(local_LFLAGS) -o $@ $^
+$(PROGNAME): src/main.c src/list.c src/stalk.c src/udp_rx.c src/udp_tx.c src/user_display.c src/user_reader.c
+	gcc $(local_LFLAGS) $(local_CFLAGS) -o $(PROGNAME) src/main.c src/list.c src/stalk.c src/udp_rx.c src/udp_tx.c src/user_display.c src/user_reader.c
  
-$(OBJ_FILES): $(OBJ_DIR)/%.o :  $(SRC_DIR)/%.c
-	gcc $(local_CFLAGS) -c $< -o $@
-
 clean: 
-	$(RM) $(BIN_DIR)/$(PROGNAME)
-	$(RM) $(OBJ_DIR)/*.o
+	$(RM) $(PROGNAME)
 	$(RM) log/*
  
 run: all
-	./$(BIN_DIR)/$(PROGNAME) $(INC_P) $(OUT_M) $(OUT_P)
+	./$(PROGNAME) $(PORT1) $(MACHINE2) $(PORT2)
+
+run1: all
+	./$(PROGNAME) $(PORT2) $(MACHINE1) $(PORT1)
  
 valgrind: all
-	valgrind --leak-check=full --show-leak-kinds=all -s ./$(BIN_DIR)/$(PROGNAME) $(INC_P) $(OUT_M) $(OUT_P)
+	valgrind ./$(BIN_DIR)/$(PROGNAME) $(PORT2) $(MACHINE1) $(PORT1)
