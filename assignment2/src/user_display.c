@@ -66,6 +66,10 @@ void user_display_init(){
 
     // create the rx list
     rx_list = List_create();
+    if(rx_list == NULL){
+        fprintf(stderr, "Error: rx_list is NULL\n");
+        exit(EXIT_FAILURE);
+    }
 
     pthread_create(&user_display_pid, NULL, user_display_loop, NULL);
 }
@@ -74,6 +78,7 @@ void user_display_destroy(){
     // Stops the thread
     pthread_cancel(user_display_pid);
     
+    // TODO -- ensure this memory frees are correct
     if(message){
         free_message(message);
     }
@@ -86,7 +91,6 @@ void user_display_destroy(){
 
     // Waits until thread finishes before continuing 
     pthread_join(user_display_pid, NULL);
-    //printf("Finished User Display\n");
 }
 
 bool user_display_rxList_add(char* msg){
@@ -128,11 +132,6 @@ static bool user_display_rxList_getNext(char** msg){
     }
     pthread_mutex_unlock(&rx_list_mutex);
 
-    if (msg == NULL){
-        DISPLAY_LOG("ERROR: Item Retrieved is NULL\n");
-        // Return with error
-        return true;
-    }      
     // Return without error
     return false;
 }
@@ -140,7 +139,6 @@ static bool user_display_rxList_getNext(char** msg){
 static void* user_display_loop(void* arg)
 {
     DISPLAY_LOG("Started Display Loop\n");
-    //printf("Started User Display\n");
     while(1){
         if(user_display_rxList_getNext(&message)){
             DISPLAY_LOG("ERROR: returning from rxList_getNext\n");

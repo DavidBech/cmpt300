@@ -59,15 +59,16 @@ void udp_tx_init(char* tx_machine, char* tx_port){
         }
     #endif
     
-    // We begin by retrieving the port from the input to our function
+    // Get the port to transmit to
     char* tempPtr;
     port = strtol(tx_port, &tempPtr, 10);
     if (port == 0)
     {
         fprintf(stderr, "Error in TX port number: %s", tx_port);
+        exit(EXIT_FAILURE);
     }
-    //printf("Sending Data through UDP on port: %s\n", tx_port);
-
+    
+    // Address -- TODO  use tx_machine to send to remote machines
     memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = htonl(INADDR_ANY); // Address
@@ -75,14 +76,12 @@ void udp_tx_init(char* tx_machine, char* tx_port){
 
     // Creating the socket
     tx_socket_desc = socket(PF_INET, SOCK_DGRAM, 0);
-
     if (tx_socket_desc == -1)
     {
-        UDP_TX_LOG("ERROR: invalid socket descriptor in udp_tx\n");
+        fprintf(stderr, "Error creating tx socekt\n");
+        exit(EXIT_FAILURE);
     }
-    // Bind socket to port specified -- DO NOT BIND IN TRANSMITION
-    //bind(tx_socket_desc, (struct sockaddr *) &sin, sizeof(struct sockaddr_in));
-    
+
     pthread_create(&upd_tx_pid, NULL, upd_transmit_loop, NULL);
 }
 
@@ -95,21 +94,16 @@ void udp_tx_destroy(){
         fclose(udp_tx_log);
     #endif
 
-    // TODO - Close the UPD socket
     close(tx_socket_desc);
 
     // Waits until thread finishes before continuing 
     pthread_join(upd_tx_pid, NULL);
-    //printf("Fished UPD Transmitor\n");
 }
 
 static void* upd_transmit_loop(void* arg){
-    //printf("Started UDP Transmitor on UDP_TX\n");
     UDP_TX_LOG("Started UDP TX Loop\n");
-    // TODO - coninually wait for tx_list to have messages to send to other s-talk instance
     char* msg = NULL;
     while(1){
-        // pthread_testcancel();     
         if(user_reader_txList_getNext(&msg))
         {
             UDP_TX_LOG("ERROR: Cannot retrieve the next message from the list.\n");
@@ -127,10 +121,7 @@ static void* upd_transmit_loop(void* arg){
         }
         else
         {
-            //printf("First is here\n");
             UDP_TX_LOG("Message Sent Successfully\n");  
-            // Question: Why do we have to add each message to a list and then output 
-            // the messages added to the list for the assignment?
             if (strcmp(msg, "!\n\0") == 0)
             {
                 UDP_TX_LOG("Received Termination Request; now preparing for termination\n");

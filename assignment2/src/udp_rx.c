@@ -65,27 +65,28 @@ void udp_rx_init(char* rx_port){
     char* endptr;
     port = strtol(rx_port, &endptr, 10);
     if(port == 0){
-        fprintf(stderr, "Error in RX port number: %s\n", rx_port);
+        fprintf(stderr, "Error invalid RX port number: %s\n", rx_port);
+        exit(EXIT_FAILURE);
     }
-    //printf("Receiving Data on port: %d\n", port);
-       // Setup Address
+    
+    // Setup Address TODO remote address support
     struct sockaddr_in sin;
     memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;
     sin.sin_addr.s_addr = htonl(INADDR_ANY); // Address
     sin.sin_port = htons(port);              // Port Watching
-    // TODO INVALID PORT?
-    // TODO get host name?
 
     // Create the socket
     rx_socket_desc = socket(PF_INET, SOCK_DGRAM, 0);
     if(rx_socket_desc == -1){
-        UDP_RX_LOG("ERROR: invalid socket descriptor in udp_rx\n");
-        //TODO
+        fprintf(stderr, "Error creating rx socket descriptor\n");
+        exit(EXIT_FAILURE);
     }
     // Bind socket to port specified
-    // TODO BIND CAN FAIL?
-    bind(rx_socket_desc, (struct sockaddr *) &sin, sizeof(struct sockaddr_in));
+    if(bind(rx_socket_desc, (struct sockaddr *) &sin, sizeof(struct sockaddr_in)) == -1){
+        fprintf(stderr, "Error binding rx socket\n");
+        exit(EXIT_FAILURE);
+    }
 
     pthread_create(&udp_rx_pid, NULL, udp_recieve_loop, NULL);
 }
@@ -107,7 +108,6 @@ void udp_rx_destroy(){
 }
 
 static void* udp_recieve_loop(void* arg){
-    //printf("Started UDP Transmitor on UDP_RX\n");
     UDP_RX_LOG("Started UDP RX Loop\n");
     while(1){
         messageRx = malloc(MAX_MESSAGE_SIZE);

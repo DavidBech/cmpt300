@@ -67,8 +67,8 @@ void user_reader_init(){
 
     tx_list = List_create();
     if(tx_list == NULL){
-        // TODO failure
-        READER_LOG("ERROR: You have now exceeded the total messages that you can have on the list at a time.\n");
+        fprintf(stderr, "Error Creating tx list\n");
+        exit(EXIT_FAILURE);
     }
 
     pthread_create(&user_reader_pid, NULL, user_reader_loop, NULL);
@@ -83,14 +83,13 @@ void user_reader_destroy(){
         fclose(reader_log);
     #endif
 
-    // free allocated memory
+    // free allocated memory TODO
     //List_free(tx_list, TODO FREE FUNCTION );
     //FREE BUFFER?
     free(user_input);
 
     // Waits until thread finishes before continuing 
     pthread_join(user_reader_pid, NULL);
-    //printf("Finished User Reader\n");
 }
 
 bool user_reader_txList_getNext(char** msg){
@@ -156,23 +155,17 @@ static bool txList_addFirst(char* msg){
 static void* user_reader_loop(void* arg)
 {
     READER_LOG("Started Reader Loop\n");
-    // TODO - read user input puting messages onto a List
-    //printf("Started User Reader\n");
-    // used to ensure fgets didn't fail
     char* readerReturn = NULL;
     while(1){
         // TODO ALLOCATE MEMORY here?
         user_input = malloc(MAX_MESSAGE_SIZE);
-        // TODO ALLOCATE MEMORY?
        
-        //printf("Input '!' and then hit the Enter Key To End Program:\n");
         // Get user input
-        // TODO message too large, potentially send multiple packets?
+        // TODO message doesn't fit in buffer
         readerReturn = fgets(user_input, MAX_MESSAGE_SIZE - 1, stdin);
         
-        // TODO readerReturn == NULL ERROR HANDLING?
         if(readerReturn == NULL){
-            // TODO ERROR
+            // TODO ERROR with fgets
             READER_LOG("ERROR: No characters have been read. Please, input again\n");
         }
 
@@ -182,23 +175,20 @@ static void* user_reader_loop(void* arg)
 
         if(strcmp(user_input, "!\n\0") == 0)
         {
-            // TODO -- send shutdown to other stalk process
-            // TODO -- move into udp tx to ensure the message is sent
-            txList_addLast(user_input);
-            // I changed here to stalk_waitforshutdown() as opposed to stalk_initiateShutdown()
+            if(txList_addLast(user_input) == LIST_FAIL){
+                // TODO ERROR HANDLING
+                READER_LOG("ERROR: message added to list failed\n");                
+            }
             stalk_waitForShutdown();
         } 
         else 
         {
             // append message to list
-            if(txList_addFirst(user_input)){
+            if(txList_addFirst(user_input) == LIST_FAIL){
                 // TODO ERROR HANDLING
-                READER_LOG("ERROR: The message has not been added to the list. Please, try again.\n");
+                READER_LOG("ERROR: message added to list failed\n");
             }
         }
-        // TODO THIS FREE SHOULDN'T BE HERE
-        // free(user_input);
-       // printf("Here is now an output\n");
     }
     return NULL;
 }
