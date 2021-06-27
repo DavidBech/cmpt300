@@ -80,8 +80,8 @@ void udp_tx_init(char* tx_machine, char* tx_port){
     {
         UDP_TX_LOG("ERROR: invalid socket descriptor in udp_tx\n");
     }
-    // Bind socket to port specified
-    bind(tx_socket_desc, (struct sockaddr *) &sin, sizeof(struct sockaddr_in));
+    // Bind socket to port specified -- DO NOT BIND IN TRANSMITION
+    //bind(tx_socket_desc, (struct sockaddr *) &sin, sizeof(struct sockaddr_in));
     
     pthread_create(&upd_tx_pid, NULL, upd_transmit_loop, NULL);
 }

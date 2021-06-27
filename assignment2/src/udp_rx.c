@@ -67,7 +67,7 @@ void udp_rx_init(char* rx_port){
     if(port == 0){
         fprintf(stderr, "Error in RX port number: %s\n", rx_port);
     }
-    printf("Receiving Data on port: %d\n", port);
+    //printf("Receiving Data on port: %d\n", port);
        // Setup Address
     struct sockaddr_in sin;
     memset(&sin, 0, sizeof(sin));
@@ -107,14 +107,14 @@ void udp_rx_destroy(){
 }
 
 static void* udp_recieve_loop(void* arg){
-    printf("Started UDP Transmitor on UDP_RX\n");
+    //printf("Started UDP Transmitor on UDP_RX\n");
     UDP_RX_LOG("Started UDP RX Loop\n");
     while(1){
         messageRx = malloc(MAX_MESSAGE_SIZE);
         UDP_RX_LOG("Waiting for message\n");
         // blocking call to receive message
         int bytesRx = recv(rx_socket_desc, messageRx, MAX_MESSAGE_SIZE, 0);
-        printf("Recieved Message: %s", messageRx);
+        //printf("Recieved Message: %s", messageRx);
         if(bytesRx == 0){
             UDP_RX_LOG("ERROR: Recieved 0 bytes\n");
             // TODO 

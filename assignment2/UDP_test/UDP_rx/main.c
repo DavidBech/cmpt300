@@ -20,11 +20,11 @@ int main(){
     struct sockaddr_in sin;
     memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = htonl(INADDR_ANY); // Address
-    sin.sin_port = htons(PORT);              // Port Watching
+    sin.sin_addr.s_addr = htonl(INADDR_ANY);
+    sin.sin_port = htons(PORT);
 
     // Create the socket
-    int socketDesc = socket(PF_INET, SOCK_DGRAM, 0);
+    int socketDesc = socket(AF_INET, SOCK_DGRAM, 0);
     if(socketDesc == -1){
         perror(NULL);
         fprintf(stderr, "fail socket call\n");
@@ -38,18 +38,12 @@ int main(){
     }
 
     char messageRx[MSG_MAX_LEN];
-    while(1){
-        struct sockaddr_in sinRemote;
-        unsigned int sin_len = sizeof(sinRemote);
-        printf("Waiting for message\n");
-        int bytesRx = recv(socketDesc, messageRx, MSG_MAX_LEN, 0);
-        int term_null = (bytesRx < MSG_MAX_LEN) ? bytesRx : MSG_MAX_LEN -1;
-        messageRx[term_null] = '\0';
+    printf("Waiting for message\n");
+    int bytesRx = recv(socketDesc, messageRx, MSG_MAX_LEN, 0);
+    int term_null = (bytesRx < MSG_MAX_LEN) ? bytesRx : MSG_MAX_LEN -1;
+    messageRx[term_null] = '\0';
         
-        printf("Message recieved %d Bytes: |%s|\n", bytesRx, messageRx);
-    }
-    // sendto(socket, &msg, len, 0, (struct sockaddr *)&remote, sizeof(struct sockaddr_in));
-
+    printf("Message recieved %d Bytes: |%s|\n", bytesRx, messageRx);
     close(socketDesc);
     return(0);
 }

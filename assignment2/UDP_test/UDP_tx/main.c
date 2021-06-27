@@ -19,16 +19,20 @@ int main(){
     struct sockaddr_in sin;
     memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = htonl(INADDR_ANY); // Address
-    sin.sin_port = htons(PORT);           // Port Watching for response
+    sin.sin_addr.s_addr = htonl(INADDR_ANY);
+    sin.sin_port = htons(PORT);
 
     // Create the socket
-    int socketDesc = socket(AF_INET, SOCK_DGRAM, 0); 
+    int socketDesc = socket(AF_INET, SOCK_DGRAM, 0);
+    if(socketDesc == -1){
+        perror("fail socket call: ");
+        exit(1);
+    }
     // Bind socket to port specified
-    bind(socketDesc, (struct sockaddr *) &sin, sizeof(struct sockaddr_in));
-
-    // struct sockaddr_in sinRemote;
-    // unsigned int sin_len = sizeof(sinRemote);
+    //if(bind(socketDesc, (struct sockaddr *) &sin, sizeof(struct sockaddr_in)) == -1){
+    //    perror("fail bind call: ");
+    //    exit(1);
+    //}
 
     char messageTx[MSG_MAX_LEN];
     printf("Waiting for input to send\n");
