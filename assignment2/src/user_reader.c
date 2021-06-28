@@ -166,7 +166,9 @@ static void* user_reader_loop(void* arg)
         
         if(readerReturn == NULL){
             // TODO ERROR with fgets
-            READER_LOG("ERROR: No characters have been read. Please, input again\n");
+            READER_LOG("Error fgets failed\n");
+            free(user_input);
+            continue;
         }
 
         char output[] = "The input sent successfully is: ";

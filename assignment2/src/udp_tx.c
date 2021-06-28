@@ -129,6 +129,7 @@ static void* upd_transmit_loop(void* arg){
                 return NULL;
             }
         }
+        free(msg);
     }
     return NULL;
 }
