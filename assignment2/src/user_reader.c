@@ -175,7 +175,7 @@ static void* user_reader_loop(void* arg)
 
         if(strcmp(user_input, "!\n\0") == 0)
         {
-            if(txList_addLast(user_input) == LIST_FAIL){
+            if(txList_addLast(user_input)){
                 // TODO ERROR HANDLING
                 READER_LOG("ERROR: message added to list failed\n");                
             }
@@ -184,7 +184,7 @@ static void* user_reader_loop(void* arg)
         else 
         {
             // append message to list
-            if(txList_addFirst(user_input) == LIST_FAIL){
+            if(txList_addFirst(user_input)){
                 // TODO ERROR HANDLING
                 READER_LOG("ERROR: message added to list failed\n");
             }
