@@ -2,9 +2,9 @@
 PROGNAME := s-talk
 
 PORT1 = 12345
-MACHINE1 = "TOOD_MACHINE1"
+MACHINE1 = "128.0.0.1"
 PORT2 = 69420
-MACHINE2 = "TOOD_MACHINE2"
+MACHINE2 = "128.0.0.1"
 
 RM := rm -f
 SRC_DIR := src
@@ -29,4 +29,4 @@ run1: all
 	./$(PROGNAME) $(PORT2) $(MACHINE1) $(PORT1)
  
 valgrind: all
-	valgrind ./$(BIN_DIR)/$(PROGNAME) $(PORT2) $(MACHINE1) $(PORT1)
+	valgrind ./$(PROGNAME) $(PORT2) $(MACHINE1) $(PORT1)
