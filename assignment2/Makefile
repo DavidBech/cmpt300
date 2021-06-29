@@ -2,9 +2,9 @@
 PROGNAME := s-talk
 
 PORT1 = 12345
-MACHINE1 = "128.0.0.1"
+MACHINE1 = "127.0.0.1"
 PORT2 = 69420
-MACHINE2 = "128.0.0.1"
+MACHINE2 = "127.0.0.1"
 
 RM := rm -f
 SRC_DIR := src

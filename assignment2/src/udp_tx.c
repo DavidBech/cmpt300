@@ -21,7 +21,7 @@ static pthread_t upd_tx_pid;
 // Socket that would send the packets recieved from a user's input
 static int tx_socket_desc;
 
-static int port;
+//static int port;
 
 static struct sockaddr_in sin;
 
@@ -59,29 +59,36 @@ void udp_tx_init(char* tx_machine, char* tx_port){
         }
     #endif
     
-    // Get the port to transmit to
-    char* tempPtr;
-    port = strtol(tx_port, &tempPtr, 10);
-    if (port == 0)
-    {
-        fprintf(stderr, "Error in TX port number: %s", tx_port);
+    // set sin to all zeros
+    memset(&sin, 0, sizeof(sin));
+    struct addrinfo *res;
+
+    // Get address from machine and port
+    if(getaddrinfo(tx_machine, tx_port, NULL, &res)){
+        // TODO -- Hints, currently NULL
+        fprintf(stderr, "Error getaddrinfo failed\n");
         exit(EXIT_FAILURE);
     }
-    
-    // Address -- TODO  use tx_machine to send to remote machines
-    memset(&sin, 0, sizeof(sin));
-    sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = htonl(INADDR_ANY); // Address
-    sin.sin_port = htons(port);
+
+    for(struct addrinfo *p=res; p !=NULL; p=p->ai_next){
+        if(p->ai_family == AF_INET){
+            sin = *(struct sockaddr_in *)p->ai_addr;
+        } else {
+            fprintf(stderr, "Error: IP V 6 \n");
+            exit(EXIT_FAILURE);
+        }
+    }
 
     // Creating the socket
     tx_socket_desc = socket(PF_INET, SOCK_DGRAM, 0);
-    if (tx_socket_desc == -1)
-    {
+    if (tx_socket_desc == -1) {
         fprintf(stderr, "Error creating tx socekt\n");
         exit(EXIT_FAILURE);
     }
+    // Free the results to ensure no memory leak
+    freeaddrinfo(res);
 
+    // Create the pthread
     pthread_create(&upd_tx_pid, NULL, upd_transmit_loop, NULL);
 }
 
