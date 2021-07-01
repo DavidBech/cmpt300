@@ -13,18 +13,6 @@
 #include "list.h"
 #include "stalk.h"
 
-// Loop that thread runs till cancled
-static void* upd_transmit_loop(void* arg);
-
-static pthread_t upd_tx_pid;
-
-// Socket that would send the packets recieved from a user's input
-static int tx_socket_desc;
-
-//static int port;
-
-static struct sockaddr_in sin;
-
 #ifdef DEBUG
     // Variables for debugging purposes, unused otherwise
     // Log file to print log messages to
@@ -46,6 +34,16 @@ static struct sockaddr_in sin;
 #else
     #define UDP_TX_LOG(_message) ;
 #endif
+
+// Loop that thread runs till cancled
+static void* upd_transmit_loop(void* arg);
+
+// pthread variables
+static pthread_t upd_tx_pid;
+
+// UDP variables
+static int tx_socket_desc;
+static struct sockaddr_in sin;
 
 void udp_tx_init(char* tx_machine, char* tx_port){
     #ifdef DEBUG
@@ -110,33 +108,30 @@ void udp_tx_destroy(){
 static void* upd_transmit_loop(void* arg){
     UDP_TX_LOG("Started UDP TX Loop\n");
     char* msg = NULL;
+    int bytesTx;
     while(1){
-        if(user_reader_txList_getNext(&msg))
-        {
-            UDP_TX_LOG("ERROR: Cannot retrieve the next message from the list.\n");
-            // TODO: ERROR HANDLING
-        }
-        UDP_TX_LOG(msg);
-        int bytesTx = sendto(tx_socket_desc, msg, MAX_MESSAGE_SIZE, 0, (struct sockaddr*) &sin, sizeof(struct sockaddr_in));
-        if(bytesTx == 0){
-            UDP_TX_LOG("ERROR: Sent 0 bytes \n");
-            // TODO 
-        }
-        else if(bytesTx == -1){
-            UDP_TX_LOG("ERROR: Sent Invalid Message\n");
-            // TODO: error recieving message
-        }
-        else
-        {
-            UDP_TX_LOG("Message Sent Successfully\n");  
-            if (strcmp(msg, "!\n\0") == 0)
-            {
-                UDP_TX_LOG("Received Termination Request; now preparing for termination\n");
+        // Blocking call to get next message
+        // Cancel is disabled when a message is retrieved
+        user_reader_txList_getNext(&msg);
+        UDP_TX_LOG("Retrieved Message from tx list\n");
+        bytesTx = sendto(tx_socket_desc, msg, MAX_MESSAGE_SIZE, 0, (struct sockaddr*) &sin, sizeof(struct sockaddr_in));
+        if(bytesTx < 1){
+            UDP_TX_LOG("Error in sendto call\n");
+            // TODO
+            fprintf(stderr, "Error sendto call TODO\n");
+            exit(EXIT_FAILURE);
+            // Attempt to send message again should not terminate here
+        } else {
+            UDP_TX_LOG("Message Sent without error\n");  
+            if (strcmp(msg, TERMINATION_STRING) == 0){
+                UDP_TX_LOG("Recieved Termination message - initiating shutdown\n");
                 stalk_initiateShutdown();
                 return NULL;
             }
         }
         free(msg);
+        // once the retrieved message is freed enable canceling again
+        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     }
     return NULL;
 }

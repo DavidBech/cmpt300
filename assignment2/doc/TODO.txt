@@ -15,17 +15,10 @@ user_display
         - Error handling fputs error
 
 user_reader
-    destroy:
-        - verify no memory leak present as well as memory beeing freed at correct time
-    txList_addLast
-        - add to list fails
-    txList_addFirst
-        - add to list fails
-    user_reader_loop
-        - memory allocation
-        - buffer overflow
-        - fgets failure
-        - failure to add message to list x2 for shutdown and for message
+    Message is sent with the following:
+        "{Text with length % BUFFER SIZE - 1 == 0}!\n"
+    This will terminate the program
+
 udp_rx
     init
         - verify error handling with bind socket calls ect
