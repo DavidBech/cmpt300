@@ -99,6 +99,8 @@ void udp_rx_destroy(){
         // close logging file
         fclose(udp_rx_log);
     #endif
+
+    free(messageRx);
     // Close the UPD socket
     close(rx_socket_desc);
 
@@ -130,11 +132,13 @@ static void* udp_recieve_loop(void* arg){
             messageRx[term_null] = '\0';
             if(strcmp(messageRx, "!\n\0") == 0){
                 UDP_RX_LOG("Recieved Termination Message\n");
+                free(messageRx);
                 stalk_initiateShutdown();
                 return NULL;
             }
             else if(user_display_rxList_add(messageRx)){
                 UDP_RX_LOG("ERROR: Adding Message to list\n");
+                free(messageRx);
                 // TODO: error
             }
             UDP_RX_LOG("Message Added to List\n");

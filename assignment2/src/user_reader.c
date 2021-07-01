@@ -74,6 +74,11 @@ void user_reader_init(){
     pthread_create(&user_reader_pid, NULL, user_reader_loop, NULL);
 }
 
+static void free_message(void* msg){
+    free(msg);
+    msg = NULL;
+}
+
 void user_reader_destroy(){
     // Stops the thread
     pthread_cancel(user_reader_pid);
@@ -86,7 +91,10 @@ void user_reader_destroy(){
     // free allocated memory TODO
     //List_free(tx_list, TODO FREE FUNCTION );
     //FREE BUFFER?
-    free(user_input);
+    if(user_input){
+        free_message(user_input);
+    }
+    List_free(tx_list, free_message);
 
     // Waits until thread finishes before continuing 
     pthread_join(user_reader_pid, NULL);

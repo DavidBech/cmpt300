@@ -76,18 +76,19 @@ void user_display_init(){
 
 void user_display_destroy(){
     // Stops the thread
-    pthread_cancel(user_display_pid);
-    
     // TODO -- ensure this memory frees are correct
-    if(message){
-        free_message(message);
-    }
-    List_free(rx_list, free_message);
+
+    pthread_cancel(user_display_pid);
 
     #ifdef DEBUG
         // close logging file
         fclose(display_log);
     #endif
+
+    if(message){
+        free_message(message);
+    }
+    List_free(rx_list, free_message);
 
     // Waits until thread finishes before continuing 
     pthread_join(user_display_pid, NULL);
@@ -150,7 +151,7 @@ static void* user_display_loop(void* arg)
         }
         fflush(stdout);
         DISPLAY_LOG("Output message\n");
-        free_message(message);
+        //free_message(message);
     }
     return NULL;
 }

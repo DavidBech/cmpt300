@@ -59,4 +59,4 @@ run1: all
 	./$(PROGNAME) $(PORT2) $(MACHINE1) $(PORT1)
  
 valgrind: all
-	valgrind ./$(PROGNAME) $(PORT2) $(MACHINE1) $(PORT1)
+	valgrind --leak-check=full --show-leak-kinds=all ./$(PROGNAME) $(PORT2) $(MACHINE1) $(PORT1)
