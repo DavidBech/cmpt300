@@ -170,7 +170,7 @@ static void* user_reader_loop(void* arg)
         memset(user_input, '\0', MAX_MESSAGE_SIZE);
         // Get user input
         // TODO message doesn't fit in buffer
-        readerReturn = fgets(user_input, MAX_MESSAGE_SIZE - 1, stdin);
+        readerReturn = fgets(user_input, MAX_MESSAGE_SIZE, stdin);
         
         if(readerReturn == NULL){
             // TODO ERROR with fgets
