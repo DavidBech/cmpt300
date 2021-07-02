@@ -28,8 +28,6 @@ udp_rx
         - send failed 
         - add message faileed
 udp_tx
-    init
-        - getaddrinfo hints?
-        - get next message failed
-        - send zero bytes
-        - send failed
+    - getaddrinfo hints?
+    - message transmit failed
+    - verify remote machines

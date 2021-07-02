@@ -118,7 +118,7 @@ static void* upd_transmit_loop(void* arg){
         if(bytesTx < 1){
             UDP_TX_LOG("Error in sendto call\n");
             // TODO
-            fprintf(stderr, "Error sendto call TODO\n");
+            fprintf(stderr, "Error sendto call\n");
             exit(EXIT_FAILURE);
             // Attempt to send message again should not terminate here
         } else {

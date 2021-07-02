@@ -106,7 +106,7 @@ static void txList_addmessage(char* msg){
     int status = 0;
     pthread_mutex_lock(&tx_list_mutex);
     {
-        if (List_count(tx_list) == LIST_MAX_NUM_NODES/2){
+        if (List_count(tx_list) == STALK_MAX_NUM_NODES/2){
             // Wait for available list node
             pthread_cond_wait(&tx_list_full, &tx_list_mutex);
         }
