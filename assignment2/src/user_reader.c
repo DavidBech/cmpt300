@@ -154,6 +154,7 @@ static void* user_reader_loop(void* arg){
             txList_addmessage(user_input);
             // stop reading new messages
             stalk_waitForShutdown();
+            return NULL;
         } else {
             // append message to list
             txList_addmessage(user_input);
