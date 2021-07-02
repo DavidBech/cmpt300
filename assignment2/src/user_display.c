@@ -12,7 +12,7 @@ static void* user_display_loop(void* arg);
 // Gets the next message in the rx list
 //  msg: pointer to message to output should be NULL on input
 //  returns 0 on success and 1 on failure
-static bool user_display_rxList_getNext(char** msg);
+static void user_display_rxList_getNext(char** msg);
 
 // Function used to free allocated memory
 static void free_message(void* msg);
@@ -21,7 +21,8 @@ static void free_message(void* msg);
 static pthread_t user_display_pid;
 
 // Condition and Mutex Variables for access to rx list
-static pthread_cond_t rx_list_cond = PTHREAD_COND_INITIALIZER;
+static pthread_cond_t rx_list_empty = PTHREAD_COND_INITIALIZER;
+static pthread_cond_t rx_list_full = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t rx_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // List for incoming messages
@@ -94,66 +95,58 @@ void user_display_destroy(){
     pthread_join(user_display_pid, NULL);
 }
 
-bool user_display_rxList_add(char* msg){
-    bool status = 0;
+void user_display_rxList_add(char* msg){
     // Lock mutex for access to rx_list
     pthread_mutex_lock(&rx_list_mutex);
     {  
-        // Append Message to list
-        if(List_prepend(rx_list, (void*)msg) == LIST_FAIL){
-            // TODO ERROR HANDLING
-            status = 1;
-        } else {  
-            // Signal User Display that an item is on list
-            pthread_cond_signal(&rx_list_cond);
+        if(List_count(rx_list) == STALK_MAX_NUM_NODES/2){
+            pthread_cond_wait(&rx_list_full, &rx_list_mutex);
         }
+        // Append Message to list
+        pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+        bool status = List_prepend(rx_list, (void*)msg);
+        if(status == LIST_SUCCESS){
+            msg = NULL;
+            // new item on list
+            pthread_cond_signal(&rx_list_empty);
+        } else {  
+            // TODO Failed
+        }
+        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     }
     pthread_mutex_unlock(&rx_list_mutex);
-
-    return status;
 }
 
-static void free_message(void* msg){
-    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-    free(msg);
-    msg = NULL;
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-}
-
-static bool user_display_rxList_getNext(char** msg){
+static void user_display_rxList_getNext(char** msg){
     // Attempt to access List lock access or wait for access
     pthread_mutex_lock(&rx_list_mutex);
     {  
         // Check if list is empty
         if(List_count(rx_list) == 0){ 
-            DISPLAY_LOG("Wating for Item on List for output on screen.\n");     
             // Wait for Item on list 
-            pthread_cond_wait(&rx_list_cond, &rx_list_mutex);
+            pthread_cond_wait(&rx_list_empty, &rx_list_mutex);
         } 
-        DISPLAY_LOG("Retrieving Item from List\n");
+        pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
         *msg = (char*)List_trim(rx_list);
+        pthread_cond_signal(&rx_list_full);
     }
     pthread_mutex_unlock(&rx_list_mutex);
+}
 
-    // Return without error
-    return false;
+static void free_message(void* msg){
+    free(msg);
 }
 
 static void* user_display_loop(void* arg)
 {
     DISPLAY_LOG("Started Display Loop\n");
     while(1){
-        if(user_display_rxList_getNext(&message)){
-            DISPLAY_LOG("ERROR: returning from rxList_getNext\n");
-            // TODO ERROR HANDLING
-        }
+        user_display_rxList_getNext(&message);
         if(fputs(message, stdout) == EOF){
             DISPLAY_LOG("ERROR: fputs returned error\n");
             // TODO fputs Error
         }
         fflush(stdout);
-        DISPLAY_LOG("Output message\n");
-        pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
         free_message(message);
         message = NULL;
         pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);

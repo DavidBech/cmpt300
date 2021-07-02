@@ -106,7 +106,6 @@ void udp_rx_destroy(){
 
     // Waits until thread finishes before continuing 
     pthread_join(udp_rx_pid, NULL);
-    //printf("Fished UPD Receiver\n");
 }
 
 static void* udp_recieve_loop(void* arg){
@@ -117,37 +116,24 @@ static void* udp_recieve_loop(void* arg){
         // blocking call to receive message
         int bytesRx = recv(rx_socket_desc, messageRx, MAX_MESSAGE_SIZE, 0);
 
-        if(bytesRx == 0){
-            UDP_RX_LOG("ERROR: Recieved 0 bytes\n");
-            // TODO 
+        if(bytesRx < 1){
+            UDP_RX_LOG("Error Recieving message\n");
+            free(messageRx);
+            messageRx = NULL;
+            continue;
         }
-        else if(bytesRx == -1){
-            UDP_RX_LOG("ERROR: Recieved Invalid Message\n");
-            // TODO: error recieving message
-        } 
         else 
         {
             UDP_RX_LOG("Message Recieved\n");
             if(strcmp(messageRx, TERMINATION_STRING) == 0){
                 UDP_RX_LOG("Recieved Termination Message\n");
-                pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-                free(messageRx);
-                messageRx = NULL;
-                pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
                 stalk_initiateShutdown();
                 return NULL;
             }
-            else if(user_display_rxList_add(messageRx)){
-                UDP_RX_LOG("ERROR: Adding Message to list\n");
-                pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-                free(messageRx);
-                messageRx = NULL;
-                pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-                fprintf(stderr, "rxList_add failed\n");
-                continue;
-                // TODO: error
+            else {
+                user_display_rxList_add(messageRx);
+                UDP_RX_LOG("Message Added to List\n");
             }
-            UDP_RX_LOG("Message Added to List\n");
         }
     }
     return NULL;

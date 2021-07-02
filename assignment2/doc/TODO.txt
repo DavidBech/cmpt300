@@ -6,21 +6,13 @@ stalk
         - verify order of shutdown, does this matter? When might it matter?
 
 user_display
-    destroy:
-        - verify no memory leak present as well as memory beeing freed at correct time
-    user_display_rxList_add
-        - Error handling when item could not be added to list
-    useer_display_loop
-        - Error handling when message retrival failes
+    loop
         - Error handling fputs error
 udp_rx
     init
-        - verify error handling with bind socket calls ect
-        - remote address support? verify this is only in tx
+    - valid port values
     Loop
-        - send zero bytes
-        - send failed 
-        - add message faileed
+    - send failed 
 
 user_reader
     Message is sent with the following:
@@ -28,6 +20,7 @@ user_reader
     This will terminate the program
 
 udp_tx
+    init
     - getaddrinfo hints?
-    - message transmit failed
-    - verify remote machines
+    loop
+    - transmit failed
