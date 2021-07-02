@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <pthread.h>
-#include <time.h>
 #include <stdlib.h>
+
 #include "user_display.h"
 #include "list.h"
 #include "stalk.h"

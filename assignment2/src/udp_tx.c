@@ -1,11 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <pthread.h> 
-#include <stdlib.h>
-#include <time.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <string.h>
 
 #include "user_reader.h"
@@ -39,7 +36,7 @@ void udp_tx_init(char* tx_machine, char* tx_port){
         if(p->ai_family == AF_INET){
             sin = *(struct sockaddr_in *)p->ai_addr;
         } else {
-            fprintf(stderr, "Error: IP V 6 \n");
+            fprintf(stderr, "Error: IP V6 \n");
             exit(EXIT_FAILURE);
         }
     }

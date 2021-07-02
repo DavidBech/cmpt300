@@ -4,8 +4,6 @@
 #include <unistd.h>
 #include <pthread.h> 
 #include <string.h>
-#include <time.h>
-#include <errno.h>
 
 #include "udp_rx.h"
 #include "list.h"
