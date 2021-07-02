@@ -7,28 +7,6 @@
 #include "list.h"
 #include "stalk.h"
 
-#ifdef DEBUG
-    // Variables for debugging purposes, unused otherwise
-    // Log file to print log messages to
-    static char* reader_log_file_name = "./log/reader_log.log";
-    static FILE* reader_log;
-    // Start time fetched in init function
-    static struct tm reader_start_time;
-    // gets the current time relative to the start time
-    static struct tm reader_current_time(){
-        time_t time_temp;
-        time(&time_temp);
-        struct tm time_now = *localtime(&time_temp);
-        // only minutes and seconds are used for printout
-        time_now.tm_min -= reader_start_time.tm_min;
-        time_now.tm_sec -= reader_start_time.tm_sec;
-        return time_now;
-    }
-    #define READER_LOG(_message) STALK_LOG(reader_log, _message, reader_current_time())
-#else
-    #define READER_LOG(_message) ;
-#endif
-
 // Loop that thread runs till cancled
 static void* user_reader_loop(void* arg);
 
@@ -49,18 +27,6 @@ static pthread_cond_t tx_list_full = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t tx_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void user_reader_init(){
-    // Open log file if debugging is active
-    #ifdef DEBUG
-        // fetch start time, bust be done before thread as not threadsafe
-        reader_start_time = get_start_time();
-        // Open log file
-        reader_log = fopen(reader_log_file_name, "w");
-        if(reader_log == NULL){
-            fprintf(stderr, "Invalid File name %s, %i", __FILE__, __LINE__);
-            exit(EXIT_FAILURE);
-        }
-    #endif
-
     tx_list = List_create();
 
     if(tx_list == NULL){
@@ -74,11 +40,6 @@ void user_reader_init(){
 void user_reader_destroy(){
     // Stops the thread
     pthread_cancel(user_reader_pid);
-    
-    #ifdef DEBUG
-        // close logging file
-        fclose(reader_log);
-    #endif
 
     if(user_input){
         free_message(user_input);
@@ -132,7 +93,6 @@ static void free_message(void* msg){
 }
 
 static void* user_reader_loop(void* arg){
-    READER_LOG("Started Reader Loop\n");
     char* readerReturn = NULL;
     while(1){
         user_input = malloc(MAX_MESSAGE_SIZE);
@@ -143,7 +103,6 @@ static void* user_reader_loop(void* arg){
         // ensure user input is valid
         if(readerReturn == NULL){
             // free the buffer
-            READER_LOG("Error fgets failed\n");
             free_message(user_input);
             continue;
         }

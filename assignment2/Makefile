@@ -6,7 +6,7 @@ MACHINE1 = "127.0.0.1"
 PORT2 = 69420
 MACHINE2 = "127.0.0.1"
 
-RM := rm -f
+RM := rm -rf
 SRC_DIR := src
 INC_DIR := headers
 
@@ -15,13 +15,10 @@ local_LFLAGS := $(LFLAGS) -pthread -lpthread
 
 all: dirs $(PROGNAME) 
 
-dirs: obj log
+dirs: obj
 
 obj:
 	mkdir -p obj
-
-log:
-	mkdir -p log
 
 $(PROGNAME): obj/main.o obj/list.o obj/stalk.o obj/udp_rx.o obj/udp_tx.o obj/user_display.o obj/user_reader.o
 	gcc $(local_LFLAGS) -o $(PROGNAME) obj/main.o obj/list.o obj/stalk.o obj/udp_rx.o obj/udp_tx.o obj/user_display.o obj/user_reader.o
@@ -49,8 +46,7 @@ obj/user_reader.o: src/user_reader.c
 
 clean: 
 	$(RM) $(PROGNAME)
-	$(RM) log/*
-	$(RM) obj/*
+	$(RM) obj
  
 run: all
 	./$(PROGNAME) $(PORT1) $(MACHINE2) $(PORT2)

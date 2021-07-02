@@ -30,41 +30,7 @@ static List* rx_list = NULL;
 // Pointer for messages retrieved from list
 static char* message = NULL;
 
-#ifdef DEBUG
-    // Variables for debugging purposes, unused otherwise
-    // Log file to print log messages to
-    static char* display_log_file_name = "./log/display_log.log";
-    static FILE* display_log;
-    // Start time fetched in init function
-    static struct tm display_start_time;
-    // gets the current time relative to the start time
-    static struct tm display_current_time(){
-        time_t time_temp;
-        time(&time_temp);
-        struct tm time_now = *localtime(&time_temp);
-        // only minutes and seconds are used for printout
-        time_now.tm_min -= display_start_time.tm_min;
-        time_now.tm_sec -= display_start_time.tm_sec;
-        return time_now;
-    }
-    #define DISPLAY_LOG(_message) STALK_LOG(display_log, _message, display_current_time())
-#else
-    #define DISPLAY_LOG(_message) ;
-#endif
-
 void user_display_init(){
-    // Open log file if debugging is active
-    #ifdef DEBUG
-        // fetch start time, bust be done before thread as not threadsafe
-        display_start_time = get_start_time();
-        // Open log file
-        display_log = fopen(display_log_file_name, "w");
-        if(display_log == NULL){
-            fprintf(stderr, "Invalid File name %s, %i", __FILE__, __LINE__);
-            exit(EXIT_FAILURE);
-        }
-    #endif
-
     // create the rx list
     rx_list = List_create();
     if(rx_list == NULL){
@@ -81,10 +47,6 @@ void user_display_destroy(){
 
     pthread_cancel(user_display_pid);
 
-    #ifdef DEBUG
-        // close logging file
-        fclose(display_log);
-    #endif
 
     if(message){
         free_message(message);
@@ -139,11 +101,9 @@ static void free_message(void* msg){
 
 static void* user_display_loop(void* arg)
 {
-    DISPLAY_LOG("Started Display Loop\n");
     while(1){
         user_display_rxList_getNext(&message);
         if(fputs(message, stdout) == EOF){
-            DISPLAY_LOG("ERROR: fputs returned error\n");
             // TODO fputs Error
         }
         fflush(stdout);
