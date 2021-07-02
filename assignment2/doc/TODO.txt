@@ -13,12 +13,6 @@ user_display
     useer_display_loop
         - Error handling when message retrival failes
         - Error handling fputs error
-
-user_reader
-    Message is sent with the following:
-        "{Text with length % BUFFER SIZE - 1 == 0}!\n"
-    This will terminate the program
-
 udp_rx
     init
         - verify error handling with bind socket calls ect
@@ -27,6 +21,12 @@ udp_rx
         - send zero bytes
         - send failed 
         - add message faileed
+
+user_reader
+    Message is sent with the following:
+        "{Text with length % BUFFER SIZE - 1 == 0}!\n"
+    This will terminate the program
+
 udp_tx
     - getaddrinfo hints?
     - message transmit failed

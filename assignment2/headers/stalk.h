@@ -13,6 +13,7 @@
 // potentially multiple packets
 #define MAX_MESSAGE_SIZE 1024
 #define STALK_MAX_NUM_NODES LIST_MAX_NUM_NODES
+#define TERMINATION_STRING "!\n\0"
 
 // Initialize threads
 void stalk_initialize(char **argv);

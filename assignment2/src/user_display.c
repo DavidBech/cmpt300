@@ -114,8 +114,10 @@ bool user_display_rxList_add(char* msg){
 }
 
 static void free_message(void* msg){
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
     free(msg);
     msg = NULL;
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 }
 
 static bool user_display_rxList_getNext(char** msg){
@@ -151,7 +153,10 @@ static void* user_display_loop(void* arg)
         }
         fflush(stdout);
         DISPLAY_LOG("Output message\n");
-        //free_message(message);
+        pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+        free_message(message);
+        message = NULL;
+        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     }
     return NULL;
 }

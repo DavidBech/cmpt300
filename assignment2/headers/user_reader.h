@@ -3,8 +3,6 @@
 #ifndef _USER_READER_H_A2
 #define _USER_READER_H_A2
 
-#define TERMINATION_STRING "!\n\0"
-
 // Initialize the udp transmition port 
 //  creates a new thread that monitors the input port
 void user_reader_init(void);

@@ -12,18 +12,6 @@
 #include "stalk.h"
 #include "user_display.h"
 
-// Loop that thread runs till cancled
-static void* udp_recieve_loop(void* arg);
-
-static char* messageRx = NULL;
-
-static pthread_t udp_rx_pid;
-
-// Socket recieving UDP packets on
-static int rx_socket_desc;
-// Port reciving UDP packets on
-static int port;
-
 #ifdef DEBUG
     // Variables for debugging purposes, unused otherwise
     // Log file to print log messages to
@@ -46,10 +34,20 @@ static int port;
     #define UDP_RX_LOG(_message) ;
 #endif
 
+// Loop that thread runs till cancled
+static void* udp_recieve_loop(void* arg);
+
+// Message Buffer
+static char* messageRx = NULL;
+
+// pthread Variables
+static pthread_t udp_rx_pid;
+
+// Udp variables
+static int rx_socket_desc;
+
 void udp_rx_init(char* rx_port){
-    // TODO - add error handling, 
-    //      the port setup could fail, etc
-    //      port number could be not in valid range
+
     #ifdef DEBUG
         // fetch start time, bust be done before thread as not threadsafe
         udp_rx_start_time = get_start_time();
@@ -63,9 +61,10 @@ void udp_rx_init(char* rx_port){
 
     // UDP Setup Connection
     char* endptr;
-    port = strtol(rx_port, &endptr, 10);
+    int port = strtol(rx_port, &endptr, 10);
+    //TODO valid port values?
     if(port == 0){
-        fprintf(stderr, "Error invalid RX port number: %s\n", rx_port);
+        fprintf(stderr, "Error invalid RX port : %s\n", rx_port);
         exit(EXIT_FAILURE);
     }
     
@@ -99,8 +98,9 @@ void udp_rx_destroy(){
         // close logging file
         fclose(udp_rx_log);
     #endif
-
-    free(messageRx);
+    if(messageRx){
+        free(messageRx);
+    }
     // Close the UPD socket
     close(rx_socket_desc);
 
@@ -116,7 +116,7 @@ static void* udp_recieve_loop(void* arg){
         UDP_RX_LOG("Waiting for message\n");
         // blocking call to receive message
         int bytesRx = recv(rx_socket_desc, messageRx, MAX_MESSAGE_SIZE, 0);
-        //printf("Recieved Message: %s", messageRx);
+
         if(bytesRx == 0){
             UDP_RX_LOG("ERROR: Recieved 0 bytes\n");
             // TODO 
@@ -128,17 +128,23 @@ static void* udp_recieve_loop(void* arg){
         else 
         {
             UDP_RX_LOG("Message Recieved\n");
-            int term_null = (bytesRx < MAX_MESSAGE_SIZE) ? bytesRx : MAX_MESSAGE_SIZE -1;
-            messageRx[term_null] = '\0';
-            if(strcmp(messageRx, "!\n\0") == 0){
+            if(strcmp(messageRx, TERMINATION_STRING) == 0){
                 UDP_RX_LOG("Recieved Termination Message\n");
+                pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
                 free(messageRx);
+                messageRx = NULL;
+                pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
                 stalk_initiateShutdown();
                 return NULL;
             }
             else if(user_display_rxList_add(messageRx)){
                 UDP_RX_LOG("ERROR: Adding Message to list\n");
+                pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
                 free(messageRx);
+                messageRx = NULL;
+                pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+                fprintf(stderr, "rxList_add failed\n");
+                continue;
                 // TODO: error
             }
             UDP_RX_LOG("Message Added to List\n");
