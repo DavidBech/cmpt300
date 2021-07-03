@@ -2,7 +2,7 @@ CLI Syntax:
 s-talk [incoming port] [outgoing machine] [outgoing port]
 
 unresolved Known Issues
- - Valgrind reports still reachable data when program ends from other consol 
+ - Valgrind reports still reachable data when program ends from other console, but not from present console
 
 Other Notes
  - the constant TERMINATION_STRING is defined to have a newline character after it ie. "!\n\0"
