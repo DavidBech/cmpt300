@@ -40,7 +40,7 @@ void user_reader_init(){
 void user_reader_destroy(){
     // Stops the thread
     pthread_cancel(user_reader_pid);
-
+    printf("reader join wait\n");
     // Waits until thread finishes before continuing 
     pthread_join(user_reader_pid, NULL);
 
@@ -48,6 +48,7 @@ void user_reader_destroy(){
         free_message(user_input);
     }
     List_free(tx_list, free_message);
+    printf("read destoryed\n");
 }
 
 void user_reader_txList_getNext(char** msg){
@@ -69,6 +70,7 @@ static void txList_addmessage(char* msg){
     {
         if (List_count(tx_list) == STALK_MAX_NUM_NODES/2){
             // Wait for available list node
+            printf("wating list_full\n");
             pthread_cond_wait(&tx_list_full, &tx_list_mutex);
         }
         pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
@@ -102,9 +104,8 @@ static void* user_reader_loop(void* arg){
         
         // ensure user input is valid
         if(readerReturn == NULL){
-            // free the buffer
-            free_message(user_input);
-            continue;
+            stalk_waitForShutdown();
+            return NULL;
         }
 
         // Add message to list
