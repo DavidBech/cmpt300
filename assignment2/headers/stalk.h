@@ -2,7 +2,7 @@
 #define _STALK_H_A2
 
 // Larger messages handled thourgh
-#define MAX_MESSAGE_SIZE 3
+#define MAX_MESSAGE_SIZE 1024
 #define STALK_MAX_NUM_NODES LIST_MAX_NUM_NODES
 #define TERMINATION_STRING "!\n\0"
 

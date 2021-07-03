@@ -26,13 +26,11 @@ void udp_rx_init(char* rx_port){
     // UDP Setup Connection
     char* endptr;
     int port = strtol(rx_port, &endptr, 10);
-    //TODO valid port values?
-    if(port == 0){
+    if(port <= 256){
         fprintf(stderr, "Error invalid RX port : %s\n", rx_port);
         exit(EXIT_FAILURE);
     }
     
-    // Setup Address TODO remote address support
     struct sockaddr_in sin;
     memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;

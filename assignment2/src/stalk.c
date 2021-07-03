@@ -39,7 +39,6 @@ void stalk_initiateShutdown(){
 }
 
 void stalk_Shutdown(){
-    // TODO change the order?
     udp_rx_destroy();
     udp_tx_destroy();
     user_display_destroy();

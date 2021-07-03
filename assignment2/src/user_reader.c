@@ -40,15 +40,13 @@ void user_reader_init(){
 void user_reader_destroy(){
     // Stops the thread
     pthread_cancel(user_reader_pid);
-    printf("reader join wait\n");
     // Waits until thread finishes before continuing 
     pthread_join(user_reader_pid, NULL);
 
     if(user_input){
-        free_message(user_input);
+        free(user_input);
     }
     List_free(tx_list, free_message);
-    printf("read destoryed\n");
 }
 
 void user_reader_txList_getNext(char** msg){
@@ -65,7 +63,6 @@ void user_reader_txList_getNext(char** msg){
 }
 
 static void txList_addmessage(char* msg){
-    int status = 0;
     pthread_mutex_lock(&tx_list_mutex);
     {
         if (List_count(tx_list) == STALK_MAX_NUM_NODES/2){
@@ -74,28 +71,21 @@ static void txList_addmessage(char* msg){
             pthread_cond_wait(&tx_list_full, &tx_list_mutex);
         }
         pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-        status = List_prepend(tx_list, (void*)msg);
-        if(status == LIST_SUCCESS){
-            msg = NULL;
-            // New Item on List
-            pthread_cond_signal(&tx_list_empty);
-        } else {
-            // TODO FAILED
-        }
+        List_prepend(tx_list, (void*)msg);
+        msg = NULL;
+        pthread_cond_signal(&tx_list_empty);
         pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);   
     }
     pthread_mutex_unlock(&tx_list_mutex);
 }
 
 static void free_message(void* msg){
-    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
     free(msg);
-    msg = NULL;
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 }
 
 static void* user_reader_loop(void* arg){
     char* readerReturn = NULL;
+    bool last_had_linefeed = true;
     while(1){
         user_input = malloc(MAX_MESSAGE_SIZE);
         memset(user_input, '\0', MAX_MESSAGE_SIZE);
@@ -107,18 +97,26 @@ static void* user_reader_loop(void* arg){
             stalk_waitForShutdown();
             return NULL;
         }
-
+        
         // Add message to list
         if(strcmp(user_input, TERMINATION_STRING) == 0){
-            // append messge to list,
-            txList_addmessage(user_input);
-            // stop reading new messages
-            stalk_waitForShutdown();
-            return NULL;
-        } else {
-            // append message to list
-            txList_addmessage(user_input);
+            if(last_had_linefeed){
+                // append messge to list,
+                txList_addmessage(user_input);
+                // stop reading new messages
+                stalk_waitForShutdown();
+                return NULL;
+            } else {
+                user_input[0] = '!';
+                user_input[1] = ' ';
+                user_input[2] = '\n';
+                user_input[3] = '\0';
+            }
         }
+
+        // append message to list
+        txList_addmessage(user_input);
+        last_had_linefeed = strchr(user_input, '\n') != NULL;
     }
     return NULL;
 }

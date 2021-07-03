@@ -63,14 +63,10 @@ void user_display_rxList_add(char* msg){
         }
         // Append Message to list
         pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
-        bool status = List_prepend(rx_list, (void*)msg);
-        if(status == LIST_SUCCESS){
-            msg = NULL;
-            // new item on list
-            pthread_cond_signal(&rx_list_empty);
-        } else {  
-            // TODO Failed
-        }
+        List_prepend(rx_list, (void*)msg);
+        msg = NULL;
+        // new item on list
+        pthread_cond_signal(&rx_list_empty);
         pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     }
     pthread_mutex_unlock(&rx_list_mutex);
@@ -100,9 +96,7 @@ static void* user_display_loop(void* arg)
 {
     while(1){
         user_display_rxList_getNext(&message);
-        if(fputs(message, stdout) == EOF){
-            // TODO fputs Error
-        }
+        fputs(message, stdout);
         fflush(stdout);
         free_message(message);
         message = NULL;
