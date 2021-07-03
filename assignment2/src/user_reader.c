@@ -41,13 +41,13 @@ void user_reader_destroy(){
     // Stops the thread
     pthread_cancel(user_reader_pid);
 
+    // Waits until thread finishes before continuing 
+    pthread_join(user_reader_pid, NULL);
+
     if(user_input){
         free_message(user_input);
     }
     List_free(tx_list, free_message);
-
-    // Waits until thread finishes before continuing 
-    pthread_join(user_reader_pid, NULL);
 }
 
 void user_reader_txList_getNext(char** msg){

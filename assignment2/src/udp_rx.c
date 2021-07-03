@@ -58,14 +58,14 @@ void udp_rx_destroy(){
     // Stops the thread
     pthread_cancel(udp_rx_pid);
 
+    // Waits until thread finishes before continuing 
+    pthread_join(udp_rx_pid, NULL);
+
     if(messageRx){
         free(messageRx);
     }
     // Close the UPD socket
     close(rx_socket_desc);
-
-    // Waits until thread finishes before continuing 
-    pthread_join(udp_rx_pid, NULL);
 }
 
 static void* udp_recieve_loop(void* arg){
@@ -79,15 +79,12 @@ static void* udp_recieve_loop(void* arg){
             messageRx = NULL;
             continue;
         }
-        else 
-        {
-            if(strcmp(messageRx, TERMINATION_STRING) == 0){
-                stalk_initiateShutdown();
-                return NULL;
-            }
-            else {
-                user_display_rxList_add(messageRx);
-            }
+        else if(strcmp(messageRx, TERMINATION_STRING) == 0){
+            stalk_initiateShutdown();
+            return NULL;
+        }
+        else {
+            user_display_rxList_add(messageRx);
         }
     }
     return NULL;

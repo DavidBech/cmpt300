@@ -43,18 +43,15 @@ void user_display_init(){
 
 void user_display_destroy(){
     // Stops the thread
-    // TODO -- ensure this memory frees are correct
-
     pthread_cancel(user_display_pid);
 
+    // Waits until thread finishes before continuing 
+    pthread_join(user_display_pid, NULL);
 
     if(message){
         free_message(message);
     }
     List_free(rx_list, free_message);
-
-    // Waits until thread finishes before continuing 
-    pthread_join(user_display_pid, NULL);
 }
 
 void user_display_rxList_add(char* msg){

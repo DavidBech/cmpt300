@@ -57,11 +57,11 @@ void udp_tx_init(char* tx_machine, char* tx_port){
 void udp_tx_destroy(){
     // Stops the thread
     pthread_cancel(upd_tx_pid);
-
-    close(tx_socket_desc);
-
+    
     // Waits until thread finishes before continuing 
     pthread_join(upd_tx_pid, NULL);
+    
+    close(tx_socket_desc);
 }
 
 static void* upd_transmit_loop(void* arg){
@@ -77,11 +77,9 @@ static void* upd_transmit_loop(void* arg){
             fprintf(stderr, "Error sendto call\n");
             exit(EXIT_FAILURE);
             // Attempt to send message again should not terminate here
-        } else {
-            if (strcmp(msg, TERMINATION_STRING) == 0){
-                stalk_initiateShutdown();
-                return NULL;
-            }
+        } else if (strcmp(msg, TERMINATION_STRING) == 0){
+            stalk_initiateShutdown();
+            return NULL;
         }
         free(msg);
         // once the retrieved message is freed enable canceling again

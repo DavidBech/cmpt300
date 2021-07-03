@@ -14,9 +14,4 @@ void user_display_destroy(void);
 //  returns 0 on success and 1 on failure
 void user_display_rxList_add(char* msg);
 
-// Allocates memory for new message to add to rxList
-//  msg: output pointer to new allocated memory
-//  returns 0 on success and 1 onfailure
-//bool user_display_allocate_message(char* msg);
-
 #endif
