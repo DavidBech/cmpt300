@@ -1,2 +1,2 @@
-# cmpt300summer21
-This repository is for my CMPT300 assignemnts and practice code
+# Branch Assignment1 
+on branch assignment1
