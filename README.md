@@ -1,5 +1,8 @@
 # CMPT 300 Assignment 2 Branch
 
+Code Written by David Bechert and Emmanuel Okonkwo
+
+
 This branch contains the code for assignment 2
 
 CLI Syntax:
