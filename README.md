@@ -1,2 +1,13 @@
-# cmpt300summer21
-This repository is for my CMPT300 assignemnts and practice code
+# Assignment 3 Branch
+Makefile Targets:
+"make" or "make all" to build the default binary file
+"make run" for defult run 
+"make valgrind" to run with valgrind
+"make clean" to clean the directory
+
+Notes:
+message size is 41 since compiler adds a byte of padding anyways
+
+
+
+
