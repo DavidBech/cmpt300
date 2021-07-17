@@ -7,7 +7,7 @@ SRC_DIR := src
 INC_DIR := headers
 OBJ_DIR := obj
 local_CFLAGS := $(CFLAGS) -Wall -Werror -g -iquote $(INC_DIR)
-local_LFLAGS := $(LFLAGS) -pthread -lpthread
+local_LFLAGS := $(LFLAGS)
 
 # Default Targets and Clean Targets
 all: dirs $(PROGNAME) 
@@ -29,11 +29,31 @@ valgrind: all
 	valgrind --leak-check=full --show-leak-kinds=all ./$(PROGNAME)
 
 # gcc Targets
-$(PROGNAME): $(OBJ_DIR)/main.o $(OBJ_DIR)/list.o
-	gcc $(local_LFLAGS) -o $(PROGNAME) $(OBJ_DIR)/main.o $(OBJ_DIR)/list.o
+$(PROGNAME): $(OBJ_DIR)/main.o $(OBJ_DIR)/list.o $(OBJ_DIR)/process_cb.o $(OBJ_DIR)/kernel_sim.o $(OBJ_DIR)/executioner.o $(OBJ_DIR)/queue_manager.o $(OBJ_DIR)/semaphore.o
+	gcc $(local_LFLAGS) -o $(PROGNAME) $(OBJ_DIR)/main.o $(OBJ_DIR)/list.o $(OBJ_DIR)/kernel_sim.o $(OBJ_DIR)/executioner.o $(OBJ_DIR)/queue_manager.o $(OBJ_DIR)/process_cb.o $(OBJ_DIR)/semaphore.o
 
-obj/main.o: $(SRC_DIR)/main.c
+$(OBJ_DIR)/main.o: $(SRC_DIR)/main.c
 	gcc $(local_CFLAGS) -c $(SRC_DIR)/main.c -o $(OBJ_DIR)/main.o
 
-obj/list.o: $(SRC_DIR)/list.c
+$(OBJ_DIR)/list.o: $(SRC_DIR)/list.c
 	gcc $(local_CFLAGS) -c $(SRC_DIR)/list.c -o $(OBJ_DIR)/list.o 
+
+$(OBJ_DIR)/process_cb.o: $(SRC_DIR)/process_cb.c
+	gcc $(local_CFLAGS) -c $(SRC_DIR)/process_cb.c -o $(OBJ_DIR)/process_cb.o 
+
+$(OBJ_DIR)/kernel_sim.o: $(SRC_DIR)/kernel_sim.c
+	gcc $(local_CFLAGS) -c $(SRC_DIR)/kernel_sim.c -o $(OBJ_DIR)/kernel_sim.o 
+
+$(OBJ_DIR)/executioner.o: $(SRC_DIR)/executioner.c
+	gcc $(local_CFLAGS) -c $(SRC_DIR)/executioner.c -o $(OBJ_DIR)/executioner.o 
+
+$(OBJ_DIR)/queue_manager.o: $(SRC_DIR)/queue_manager.c
+	gcc $(local_CFLAGS) -c $(SRC_DIR)/queue_manager.c -o $(OBJ_DIR)/queue_manager.o 
+
+$(OBJ_DIR)/semaphore.o: $(SRC_DIR)/semaphore.c
+	gcc $(local_CFLAGS) -c $(SRC_DIR)/semaphore.c -o $(OBJ_DIR)/semaphore.o 
+
+
+
+
+
