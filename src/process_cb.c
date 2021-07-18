@@ -4,36 +4,23 @@
 
 #include "process_cb.h"
 
-bool pcb_init(pcb* pPcb, uint32_t pid, uint32_t prio, uint32_t state){
-    if(pid > PCB_MAX_PID){
-        return PCB_FAIL;
-    }
-    if(prio >=3){
-        return PCB_FAIL;
-    }
-    if(state >= 3) {
-        return PCB_FAIL;
-    }
+void pcb_init(pcb* pPcb, uint32_t pid, uint32_t prio, uint32_t state){
     pPcb->field.pid = pid;
     pPcb->field.prio = prio;
     pPcb->field.state = state;
     pPcb->message[0] = '\0';
-    return PCB_PASS;
+    pPcb->location = NULL;
 }
 
 bool pcb_clone(pcb* pPcb_new, pcb* pPcb_origional, uint32_t new_pid){
-    if(new_pid > PCB_MAX_PID){
-        return PCB_FAIL;
-    }
-    // TODO copy message?
+    // TODO
     pPcb_new->field = pPcb_origional->field;
     pPcb_new->field.pid = new_pid;
     return PCB_PASS;
 }
 
-bool pcb_free(pcb* pPcb){
-    // TODO
-    return PCB_FAIL;
+void pcb_free(pcb* pPcb){
+    memset(pPcb, 0, sizeof(pcb));
 }
 
 uint32_t pcb_get_pid(pcb* pPcb){
@@ -65,9 +52,7 @@ void pcb_set_message(pcb* pPcb, char* msg){
     //TODO ERROR HANDLING
 }
 
-char* pcb_get_all_info(pcb* pPcb){
-    char* info = malloc(100);
-    // TODO -- ensure free
-    sprintf(info, "%p", pPcb);
-    return info;
+void pcb_print_all_info(pcb* pPcb){
+    // TODO
+    printf("info\n");
 }

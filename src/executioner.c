@@ -34,18 +34,19 @@ void executioner_init(){
     pid_stack.head_index = 0;
     get_next_pid();
     init_process = &pcb_array[init_pid];
-    pcb_init(init_process, init_pid, INIT_STATE, INIT_PRIO);
+    pcb_init(init_process, init_pid, STATE_INIT, PRIO_INIT);
     current_process = init_process;
 }
 
 bool executioner_create(uint32_t prio){
     uint32_t pid = get_next_pid();
     if(pid <= PCB_MIN_PID || pid > PCB_MAX_PID){
+        // min pid reserved for init_process
         fprintf(stderr, "Invalid Pid: %d\n", pid);
         return KERNEL_SIM_FAILURE;
     } 
     pcb *p_pcb = &pcb_array[pid];
-    pcb_init(p_pcb, pid, prio, READY);
+    pcb_init(p_pcb, pid, prio, STATE_READY);
     queue_manager_add_ready(p_pcb);
     printf("Process pid:%d, prio:%d \n", pid, prio);
     if(current_process == init_process){

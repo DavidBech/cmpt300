@@ -26,8 +26,6 @@ static void get_input_message();
 void kernel_sim_init(void){
     executioner_init();
     queue_manager_init();
-
-    // TODO open infile and outfile if not stdin and stdout respectivly
     kernel_sim_interpreter_loop();
 }
 

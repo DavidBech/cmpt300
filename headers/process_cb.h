@@ -21,78 +21,77 @@
 
 // Process Control Block State
 enum PCB_STATE{
-    RUNNING = 0,
-    READY = 1,
-    BLOCKED = 2,
-    INIT_STATE = 3
+    STATE_RUNNING = 0,
+    STATE_READY = 1,
+    STATE_BLOCKED = 2,
+    STATE_INIT = 3
 };
 
 // Process Control Block Priority
 enum PCB_PRIO{
-    HIGH = 0,
-    NORMAL = 1, 
-    LOW = 2,
-    INIT_PRIO = 3
+    PRIO_HIGH = 0,
+    PRIO_NORMAL = 1, 
+    PRIO_LOW = 2,
+    PRIO_INIT = 3
 };
 
 // Process Control Block
 typedef struct pcb_s pcb;
 struct pcb_s {
     struct fields_t{
+        // Process ID
         uint32_t pid      :  8;
+        // Process Priority
         uint32_t prio     :  2; 
+        // Process State
         uint32_t state    :  2;
+        // Reserved
         uint32_t reserved : 20;
     } field;
+    // Process IPC Message
     char message[PCB_ICP_MESSAGE_SIZE];
+    // Process Location 
     List* location;
 };
 
+// Sets the current location
 void pcb_set_location(pcb* pPcb, List* location);
+
+// Returns the current location
 List* pcb_get_location(pcb* pPcb);
 
-// Creates a new pcb struct with the provided information
-//  returns 0 on success 1 on failure
-bool pcb_init(pcb* pPcb, uint32_t pid, uint32_t prio, uint32_t state);
+// Initializes the pcb struct with the provided information
+void pcb_init(pcb* pPcb, uint32_t pid, uint32_t prio, uint32_t state);
 
 // Creates a new pcb struct by cloning the origional provided
 //  returns 0 on success 1 on failure
 bool pcb_clone(pcb* pPcb_new, pcb* pPcb_origional, uint32_t pid_new);
 
 // Frees a pcb struct
-//  returns 0 on success 1 on failure
-bool pcb_free(pcb* pPcb);
+void pcb_free(pcb* pPcb);
 
-// Returns the pid of the provided pcb through the inout provided
-//  returns 0 on success 1 on failure
+// Returns the pid of the provided pcb
 uint32_t pcb_get_pid(pcb* pPcb);
 
-// Returns the state of the provided pcb through the inout provided
-//  returns 0 on success 1 on failure
+// Returns the state of the provided pcb
 uint32_t pcb_get_state(pcb* pPcb);
 
-// Returns the state of the provided pcb through the inout provided
-//  returns 0 on success 1 on failure
+// Sets the state of the provided pcb
 void pcb_set_state(pcb* pPcb, uint32_t state);
 
-// Returns the pid of the provided pcb through the inout provided
-//  returns 0 on success 1 on failure
+// Returns the priority of the provided pcb
 uint32_t pcb_get_priority(pcb* pPcb);
 
-// Returns the pid of the provided pcb through the inout provided
-//  returns 0 on success 1 on failure
+// Returns the message stored in the provided pcb
 char* pcb_get_message(pcb* pPcb);
 
 // Clears the current messasge in the pcb provided
-//  returns 0 on success 1 on failure
 void pcb_clear_message(pcb* pPcb);
 
 // Sets the current messasge in the pcb provided
-//  returns 0 on success 1 on failure
 void pcb_set_message(pcb* pPcb, char* msg);
 
-// Sets all info from this module into the string argument
-//  returns 0 on success 1 on failure
-char* pcb_get_all_info(pcb* pPcb);
+// prints all info for the provided pcb
+void pcb_print_all_info(pcb* pPcb);
 
 #endif
