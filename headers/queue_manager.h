@@ -28,6 +28,11 @@ void queue_manager_add_block_send(pcb* p_pcb);
 // Adds the provided pcb to the queue for processes blocked on recieve command
 void queue_manager_add_block_recieve(pcb* p_pcb);
 
+// Checks if any of the queues are non-empty
+//  return: 1 if a queue is non-empty
+//  return: 0 otherwise
+bool queue_manager_any_non_empty();
+
 // Removes the pcb from the queue its currently in
 //  return: 1 if the pcb is not currently in a queue handled by queue_manager
 //  return: 0 otherwise

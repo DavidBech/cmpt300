@@ -47,7 +47,8 @@ struct pcb_s {
         // Process State
         uint32_t state    :  2;
         // Reserved
-        uint32_t reserved : 12;
+        uint32_t in_use   :  1;
+        uint32_t reserved : 11;
     } field;
     // Process IPC Message
     char message[PCB_ICP_MESSAGE_SIZE];

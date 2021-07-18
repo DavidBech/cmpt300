@@ -71,6 +71,18 @@ void queue_manager_add_block_recieve(pcb* p_pcb){
     pcb_set_location(p_pcb, pBlocked_receive);
 }
 
+bool queue_manager_any_non_empty(){
+    if(List_count(pReady_high) 
+            || List_count(pReady_norm)
+            || List_count(pReady_low)
+            || List_count(pBlocked_send)
+            || List_count(pBlocked_receive) 
+        ){
+        return 1;
+    }
+    return 0;
+}
+
 bool queue_manager_remove(pcb* p_pcb){
     List* pLoc_pcb = pcb_get_location(p_pcb);
     if(pLoc_pcb == NULL){

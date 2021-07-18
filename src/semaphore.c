@@ -22,6 +22,10 @@ bool semaphore_block_on_sem(pcb* pPcb){
     return 0;
 }
 
+bool semaphore_any_blocked(){
+    return 0;
+}
+
 void semaphore_print_all_info(){
     printf("Semaphores\n");
     printf("\t TODO\n");

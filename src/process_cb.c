@@ -9,6 +9,7 @@ void pcb_init(pcb* pPcb, uint32_t pid, uint32_t prio, uint32_t state){
     pPcb->field.pid = pid;
     pPcb->field.prio = prio;
     pPcb->field.state = state;
+    pPcb->field.in_use = 1;
     pPcb->message[0] = '\0';
     pPcb->location = NULL;
 }
