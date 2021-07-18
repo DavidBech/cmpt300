@@ -35,4 +35,8 @@ bool semaphore_p(uint32_t id, pcb* pCaller);
 //  return: 1 if the provided pcb is blocked on any initialized semaphore
 //  return: 0 otherwise
 bool semaphore_block_on_sem(pcb* pPcb);
+
+// Prints all semaphore info
+void semaphore_print_all_info(void);
+
 #endif

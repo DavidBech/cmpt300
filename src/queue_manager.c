@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "queue_manager.h"
+#include "process_cb.h"
 #include "kernel_sim.h"
 
 static List* pReady_high = NULL;
@@ -11,6 +12,13 @@ static List* pBlocked_send = NULL;
 static List* pBlocked_receive = NULL;
 
 static bool comapre_pcb_pointer(void* item0, void* item1);
+static bool print_pcb(void* item0, void* item1);
+
+const char* queue_manager_list_names[] = {"Ready (high)", 
+                                          "Ready (norm)", 
+                                          "Ready  (low)", 
+                                          "Blocked (send)", 
+                                          "Blocked  (Rec)"};
 
 void queue_manager_init(void){
     pReady_high = List_create();
@@ -81,17 +89,86 @@ bool queue_manager_remove(pcb* p_pcb){
 }
 
 pcb* queue_manager_get_next_ready_exempt(pcb* exempted_process){
-    return NULL;
+    pcb_set_state(exempted_process, STATE_READY);
+    if(queue_manager_add_ready(exempted_process)){
+        // TODO ERROR
+    } 
+    return queue_manager_get_next_ready();
 }
 
 pcb* queue_manager_get_next_ready(void){
+    if(List_count(pReady_high)){
+        return List_trim(pReady_high);
+    } else if(List_count(pReady_norm)){
+        return List_trim(pReady_norm);
+    } else if(List_count(pReady_low)){
+        return List_trim(pReady_low);
+    }
+    // all ready queues empty
     return NULL;
 }
 
 void queue_manager_print_info(){
+    printf("Queues: \n");
+    if(List_count(pReady_high)){
+        printf("Ready (high):\n");
+        List_search(pReady_high, print_pcb, NULL);
+    } else {
+        printf("Ready (high): empty\n");
+    }
 
+    if(List_count(pReady_norm)){
+        printf("Ready (norm):\n");
+        List_search(pReady_norm, print_pcb, NULL);
+    } else {
+        printf("Ready (norm): empty\n");
+    }
+    
+    if(List_count(pReady_low)){
+        printf("Ready (low):\n");
+        List_search(pReady_low, print_pcb, NULL);
+    } else {
+        printf("Ready (low): empty\n");
+    }
+
+    if(List_count(pBlocked_send)){
+        printf("Blocked (send):\n");
+        List_search(pBlocked_send, print_pcb, NULL);
+    } else {
+        printf("Blocked (send): empty\n");
+    }
+
+    if(List_count(pBlocked_receive)){
+        printf("Blocked (Rec):\n");
+        List_search(pBlocked_receive, print_pcb, NULL);
+    } else {
+        printf("Blocked (Rec): empty\n");
+    }
+
+}
+
+int queue_manager_list_hash(List* pList){
+    if(pList == pReady_high){
+        return R_HIGH_HASH;
+    } else if(pList == pReady_norm){
+        return R_NORM_HASH;
+    } else if (pList == pReady_low){
+        return R_LOW_HASH;
+    } else if (pList == pBlocked_send){
+        return B_SEND_HASH;
+    } else if (pList == pBlocked_receive){
+        return B_RECEIVE_HASH;
+    } else {
+        return INVALID_HASH;
+    }
 }
 
 static bool comapre_pcb_pointer(void* item0, void* item1){
     return item0 == item1;
+}
+
+static bool print_pcb(void* item0, void* item1){
+    printf("\t");
+    pcb_print_all_info(item0);
+    return 0;
 }

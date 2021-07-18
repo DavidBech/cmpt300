@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "process_cb.h"
+#include "queue_manager.h"
 
 void pcb_init(pcb* pPcb, uint32_t pid, uint32_t prio, uint32_t state){
     pPcb->field.pid = pid;
@@ -33,6 +34,9 @@ uint32_t pcb_get_state(pcb* pPcb){
 
 void pcb_set_state(pcb* pPcb, uint32_t state){
     pPcb->field.state = state;
+    if(state == STATE_RUNNING){
+        pcb_set_location(pPcb, NULL);
+    }
 }
 
 uint32_t pcb_get_priority(pcb* pPcb){
@@ -52,7 +56,34 @@ void pcb_set_message(pcb* pPcb, char* msg){
     //TODO ERROR HANDLING
 }
 
+void pcb_set_location(pcb* pPcb, List* location){
+    if(pPcb->location == PCB_INIT_LOC){
+        return;
+    }
+    pPcb->location = location;
+}
+
+List* pcb_get_location(pcb* pPcb){
+    return pPcb->location;
+}
+
 void pcb_print_all_info(pcb* pPcb){
-    // TODO
-    printf("info\n");
+    const char* list_location;
+    if(pPcb->location == PCB_INIT_LOC){
+        list_location = "Init";
+    } else {
+        int loc = queue_manager_list_hash(pPcb->location);
+        // TODO ADD SEMAPHORE
+        if(loc != -1){
+            list_location = queue_manager_list_names[loc];
+        } else {
+            list_location = "None";
+    }
+}
+    printf("PID: %#04x, Prio: %s, State: %s, Queue: %s, Message:%s;\n", 
+        pPcb->field.pid, 
+        pPcb->field.prio == PRIO_HIGH ? "high" : pPcb->field.prio == PRIO_NORMAL ? "norm" : pPcb->field.prio == PRIO_LOW ? " low" : "init", 
+        pPcb->field.state == STATE_RUNNING ? "running" : pPcb->field.state == STATE_READY ? "  ready" : "blocked",
+        list_location,
+        pPcb->message);
 }

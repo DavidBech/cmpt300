@@ -567,7 +567,7 @@ void List_free(List* pList, FREE_FN pItemFreeFn){
 void* List_search(List* pList, COMPARATOR_FN pComparator, void* pComparisonArg){
     assert(pList != NULL);
     assert(pComparator != NULL);
-    assert(pComparisonArg != NULL);
+    //assert(pComparisonArg != NULL);
     assert(pList->inUse);
     // If the list is empty simply return null
     if(pList->size == 0){

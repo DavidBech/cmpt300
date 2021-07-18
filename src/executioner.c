@@ -23,6 +23,7 @@ static pcb pcb_array[PCB_MAX_PID];
 // Static Functions
 static int get_next_pid();
 static void free_pid(int pid_to_free);
+static void print_current_proc_info();
 
 void executioner_init(){
     assert(PCB_MIN_PID == 0);
@@ -32,36 +33,49 @@ void executioner_init(){
     }
     pid_stack.next_index[PCB_MAX_PID] = -1;
     pid_stack.head_index = 0;
-    get_next_pid();
+    get_next_pid(); //remove init pid
     init_process = &pcb_array[init_pid];
-    pcb_init(init_process, init_pid, STATE_INIT, PRIO_INIT);
+    pcb_init(init_process, init_pid, STATE_RUNNING, PRIO_INIT);
+    pcb_set_location(init_process, PCB_INIT_LOC);
     current_process = init_process;
 }
 
 bool executioner_create(uint32_t prio){
+    if(prio > 2 || prio < 0){
+        printf("Invalid priority %d aborting create command\n", prio);
+        return KERNEL_SIM_FAILURE;
+    }
     uint32_t pid = get_next_pid();
     if(pid <= PCB_MIN_PID || pid > PCB_MAX_PID){
         // min pid reserved for init_process
-        fprintf(stderr, "Invalid Pid: %d\n", pid);
+        printf("Invalid pid %d \n aborting create command", pid);
         return KERNEL_SIM_FAILURE;
-    } 
+    }
     pcb *p_pcb = &pcb_array[pid];
     pcb_init(p_pcb, pid, prio, STATE_READY);
     queue_manager_add_ready(p_pcb);
-    printf("Process pid:%d, prio:%d \n", pid, prio);
+    printf("Created New Process: \n\t");
+    pcb_print_all_info(p_pcb);
     if(current_process == init_process){
         current_process = queue_manager_get_next_ready();
-        printf("Current Process: %s\n", pcb_get_all_info(current_process));
+        pcb_set_state(current_process, STATE_RUNNING);
+        pcb_set_state(init_process, STATE_READY);
+        printf("Previous Process: \n\t");
+        pcb_print_all_info(init_process);
+        printf("Current Process: \n\t");
+        print_current_proc_info();
     }
     return KERNEL_SIM_SUCCESS;
 }
 
 bool executioner_fork(void){
+    // TODO
     fprintf(stderr, "Not Implemented\n");
     return KERNEL_SIM_FAILURE;
 }
 
 bool executioner_kill(uint32_t pid){ 
+    // TODO
     if(pid == init_pid){
         // TODO 
         fprintf(stderr, "Not Implemented\n");
@@ -73,9 +87,9 @@ bool executioner_kill(uint32_t pid){
 }
 
 bool executioner_exit(void){ 
-    if(pcb_get_pid(current_process) == init_pid){
+    if(current_process == init_process){
         // TODO 
-        fprintf(stderr, "Not Implemented\n");
+        fprintf(stderr, "Not Implemented exit of init process\n");
         return KERNEL_SIM_FAILURE;
     }
     free_pid(pcb_get_pid(current_process));
@@ -83,10 +97,11 @@ bool executioner_exit(void){
     pcb_free(current_process);
     if(temp == NULL){
         current_process = init_process;
-        fprintf(stderr, "Not Implemented\n");
     } else {
         current_process = temp;
     }
+    pcb_set_state(current_process, STATE_RUNNING);
+
     return KERNEL_SIM_SUCCESS;
 }
 
@@ -131,8 +146,13 @@ bool executioner_procinfo(uint32_t pid){
 }
 
 bool executioner_totalinfo(void){ 
-    fprintf(stderr, "Not Implemented\n");
-    return KERNEL_SIM_FAILURE;
+    printf("Running Process:\n\t");
+    print_current_proc_info();
+    printf("Init Process:\n\t");
+    pcb_print_all_info(init_process);
+    queue_manager_print_info();
+    semaphore_print_all_info();
+    return KERNEL_SIM_SUCCESS;
 }
 
 static int get_next_pid(){
@@ -144,4 +164,8 @@ static int get_next_pid(){
 static void free_pid(int pid_to_free){
     pid_stack.next_index[pid_to_free] = pid_stack.head_index;    
     pid_stack.head_index = pid_to_free;
+}
+
+static void print_current_proc_info(){
+    pcb_print_all_info(current_process);
 }

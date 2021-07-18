@@ -66,9 +66,9 @@ static void kernel_sim_interpreter_loop(void){
                 printf("Enter Priority (0=high, 1=norm, 2=low): ");
                 int prio = get_input_small_int();
                 if(executioner_create(prio)){
-                    printf("Error: Create Command Complete\n");
+                    printf("Create Command Complete with error\n");
                 } else {
-                    printf("Info: Create Command Complete\n");
+                    printf("Create Command Complete\n");
                 }
                 break;
             case('F'):

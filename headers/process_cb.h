@@ -14,17 +14,18 @@
 // Minimum PID value
 #define PCB_MIN_PID 0
 // Maximum PID value
-#define PCB_MAX_PID 0xFF
+#define PCB_MAX_PID 0xFFFF
 
 #define PCB_FAIL 1 
 #define PCB_PASS 0
+
+#define PCB_INIT_LOC (List*)0xFFFFFFFF
 
 // Process Control Block State
 enum PCB_STATE{
     STATE_RUNNING = 0,
     STATE_READY = 1,
-    STATE_BLOCKED = 2,
-    STATE_INIT = 3
+    STATE_BLOCKED = 2
 };
 
 // Process Control Block Priority
@@ -40,13 +41,13 @@ typedef struct pcb_s pcb;
 struct pcb_s {
     struct fields_t{
         // Process ID
-        uint32_t pid      :  8;
+        uint32_t pid      : 16;
         // Process Priority
         uint32_t prio     :  2; 
         // Process State
         uint32_t state    :  2;
         // Reserved
-        uint32_t reserved : 20;
+        uint32_t reserved : 12;
     } field;
     // Process IPC Message
     char message[PCB_ICP_MESSAGE_SIZE];

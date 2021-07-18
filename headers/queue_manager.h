@@ -5,6 +5,15 @@
 #ifndef __QUEUE_MANAGER_H
 #define __QUEUE_MANAGER_H
 
+#define R_HIGH_HASH 0
+#define R_NORM_HASH 1
+#define R_LOW_HASH 2
+#define B_SEND_HASH 3
+#define B_RECEIVE_HASH 4
+#define INVALID_HASH -1
+
+extern const char* queue_manager_list_names[];
+
 // Creates manditory queues
 void queue_manager_init(void);
 
@@ -30,12 +39,15 @@ bool queue_manager_remove(pcb* p_pcb);
 //              could be the same as the exempted_process
 pcb* queue_manager_get_next_ready_exempt(pcb* exempted_process);
 
-// Gets the next process who's turn it to be running next
+// Gets the next process who's turn it to be running next,
+//  note, this process is removed from its ready queue
 //  return: the next process who's turn it is to be running
 //  return: NULL if no such process exists
 pcb* queue_manager_get_next_ready(void);
 
 // Prints all info about all queues
 void queue_manager_print_info();
+
+int queue_manager_list_hash();
 
 #endif

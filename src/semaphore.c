@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "semaphore.h"
 #include "process_cb.h"
@@ -17,8 +18,12 @@ bool semaphore_p(uint32_t id, pcb* pCaller){
     return 1;
 }
 
-
 bool semaphore_block_on_sem(pcb* pPcb){
-    return false;
+    return 0;
+}
+
+void semaphore_print_all_info(){
+    printf("Semaphores\n");
+    printf("\t TODO\n");
 }
 
