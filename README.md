@@ -5,9 +5,6 @@ Makefile Targets:
 "make valgrind" to run with valgrind
 "make clean" to clean the directory
 
-Notes:
-message size is 41 since compiler adds a byte of padding anyways
-
 
 
 
