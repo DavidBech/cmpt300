@@ -124,6 +124,7 @@ void queue_manager_print_info(){
     printf("Queues: \n");
     if(List_count(pReady_high)){
         printf("Ready (high):\n");
+        List_first(pReady_high);
         List_search(pReady_high, print_pcb, NULL);
     } else {
         printf("Ready (high): empty\n");
@@ -131,6 +132,7 @@ void queue_manager_print_info(){
 
     if(List_count(pReady_norm)){
         printf("Ready (norm):\n");
+        List_first(pReady_norm);
         List_search(pReady_norm, print_pcb, NULL);
     } else {
         printf("Ready (norm): empty\n");
@@ -138,6 +140,7 @@ void queue_manager_print_info(){
     
     if(List_count(pReady_low)){
         printf("Ready (low):\n");
+        List_first(pReady_low);
         List_search(pReady_low, print_pcb, NULL);
     } else {
         printf("Ready (low): empty\n");
@@ -145,6 +148,7 @@ void queue_manager_print_info(){
 
     if(List_count(pBlocked_send)){
         printf("Blocked (send):\n");
+        List_first(pBlocked_send);
         List_search(pBlocked_send, print_pcb, NULL);
     } else {
         printf("Blocked (send): empty\n");
@@ -152,6 +156,7 @@ void queue_manager_print_info(){
 
     if(List_count(pBlocked_receive)){
         printf("Blocked (Rec):\n");
+        List_first(pBlocked_receive);
         List_search(pBlocked_receive, print_pcb, NULL);
     } else {
         printf("Blocked (Rec): empty\n");
