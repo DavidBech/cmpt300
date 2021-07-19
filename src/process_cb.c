@@ -83,7 +83,7 @@ void pcb_print_all_info(pcb* pPcb){
     printf("PID: %#04x, Prio: %s, State: %s, Queue: %s, Message:%s;\n", 
         pPcb->field.pid, 
         pPcb->field.prio == PRIO_HIGH ? "high" : pPcb->field.prio == PRIO_NORMAL ? "norm" : pPcb->field.prio == PRIO_LOW ? " low" : "init", 
-        pPcb->field.state == STATE_RUNNING ? "running" : pPcb->field.state == STATE_READY ? "  ready" : "blocked",
+        pPcb->field.state == STATE_RUNNING ? "running" : pPcb->field.state == STATE_READY ? "ready" : "blocked",
         list_location,
         pPcb->message);
 }

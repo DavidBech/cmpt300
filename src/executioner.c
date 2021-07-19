@@ -145,8 +145,12 @@ bool executioner_exit(void){
 }
 
 bool executioner_quantum(void){ 
-    fprintf(stderr, "Not Implemented\n");
-    return KERNEL_SIM_FAILURE;
+    printf("Previous Current Process: ");
+    print_current_proc_info();
+    current_process = queue_manager_get_next_ready_exempt(current_process);
+    printf("New Current Process: ");
+    print_current_proc_info();
+    return KERNEL_SIM_SUCCESS;
 }
 
 bool executioner_send(uint32_t pid, char* msg){ 
@@ -227,7 +231,7 @@ static bool termination(){
         return 1;
     }
     printf("Termination Proceding\n");
-    assert(process_count == 0);
+    assert(process_count == 1);
     exit(EXIT_SUCCESS);// TODO CLEANUP? // TERMINATION FROM HERE?
     return 0;
 }
