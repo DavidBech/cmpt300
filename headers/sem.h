@@ -18,12 +18,12 @@ struct semaphore_s {
 };
 
 // Initalize the semaphore module
-void semaphore_init_startup();
+void semaphore_init();
 
 // Create new semaphore
 //  return: 1 failure
 //  return: 0 success
-bool semaphore_init(uint32_t id, uint32_t value);
+bool semaphore_new(uint32_t id, uint32_t value);
 
 // increment semaphore
 //  return: 1 failure

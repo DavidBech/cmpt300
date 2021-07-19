@@ -10,12 +10,15 @@
 
 static semaphore sem_array[SEMAPHORE_NUM];
 
-void semaphore_init_startup(){
+// returns true on invalid semaphore id for initialized semaphores
+static bool valid_init_id(uint32_t id);
+
+void semaphore_init(){
     memset(&sem_array, 0, sizeof(sem_array));
     printf("Initialized semaphores");
 }
 
-bool semaphore_init(uint32_t id, uint32_t value){
+bool semaphore_new(uint32_t id, uint32_t value){
     if(id < 0 || id >=  SEMAPHORE_NUM){
         printf("Invalid sem ID: %d\n", id);
         return KERNEL_SIM_FAILURE;
@@ -64,5 +67,9 @@ bool semaphore_remove_blocked_pcb(pcb* p_pcb){
 void semaphore_print_all_info(){
     printf("Semaphores:\n");
     printf("\t TODO\n");
+}
+
+static bool valid_init_id(uint32_t id){
+    
 }
 

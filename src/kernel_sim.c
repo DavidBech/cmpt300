@@ -26,7 +26,7 @@ static void get_input_message();
 
 void kernel_sim_init(void){
     queue_manager_init();
-    semaphore_init_startup();
+    semaphore_init();
     executioner_init();
     kernel_sim_interpreter_loop();
 }
