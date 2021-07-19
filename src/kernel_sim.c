@@ -163,7 +163,7 @@ static void kernel_sim_interpreter_loop(void){
                 printf("N: New Semaphore Command\n");
                 printf("Enter the semaphore ID to create (0 to 4): ");
                 int semaphore_new_id = get_input_small_int();
-                printf("Enter the semaphore's initial input value ( > 0): ");
+                printf("Enter the semaphore's initial input value ( >= 0): ");
                 unsigned init_value = get_input_int();
                 if(executioner_semaphore_new(semaphore_new_id, init_value)){
                     // TODO failure

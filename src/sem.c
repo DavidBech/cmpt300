@@ -17,9 +17,12 @@ static bool invalid_init_id(uint32_t id);
 // Blocks the process on the semaphore
 static void block_process(pcb* p_pcb, semaphore* p_sem);
 
+// prints the pcb used in search list method
+static bool print_pcb(void* item0, void* item1);
+
 void semaphore_init(){
     memset(&sem_array, 0, sizeof(sem_array));
-    printf("Initialized semaphores");
+    printf("Initialized semaphores\n");
 }
 
 bool semaphore_new(uint32_t id, uint32_t value){
@@ -57,7 +60,6 @@ bool semaphore_v(uint32_t id){
     if(p_sem->value == 1 && List_count(p_sem->blocked)){
         // Wake Blocked process on sem
         pcb* p_waked = List_trim(p_sem->blocked);
-        pcb_set_state(p_waked, STATE_READY);
         queue_manager_add_ready(p_waked);
         printf("Process readied: ");
         pcb_print_all_info(p_waked);
@@ -76,10 +78,11 @@ bool semaphore_p(uint32_t id, pcb* pCaller){
     }
     semaphore* p_sem = &sem_array[id];
     if(p_sem->value == 0){
-        printf("Semiphore is zero, blocking running process\n");
+        printf("Semaphore is 0, blocking running process\n");
         block_process(pCaller, p_sem);
     } else {
         --p_sem->value;
+        printf("Semaphore is %d, running process still running\n", p_sem->value);
     }
     return KERNEL_SIM_SUCCESS;
 }
@@ -89,6 +92,14 @@ bool semaphore_block_on_sem(pcb* pPcb){
 }
 
 bool semaphore_any_blocked(){
+    for(int i=0; i<SEMAPHORE_NUM; ++i){
+        if(invalid_init_id(i)){
+            continue;
+        }
+        if(List_count(sem_array[i].blocked)){
+            return 1; // there is a blocked process
+        }
+    }
     return 0;
 }
 
@@ -98,7 +109,21 @@ bool semaphore_remove_blocked_pcb(pcb* p_pcb){
 
 void semaphore_print_all_info(){
     printf("Semaphores:\n");
-    printf("\t TODO\n");
+    for(int i=0; i<SEMAPHORE_NUM; ++i){
+        if(invalid_init_id(i)){
+            printf("Semaphore%d: Uninitialized\n", i);
+            continue;
+        }
+        semaphore* p_sem = &sem_array[i];
+        printf("Semaphore%d: value:%d Blocked:", i, p_sem->value);
+        if(List_count(p_sem->blocked)){
+            printf("\n");
+            List_first(p_sem->blocked);
+            List_search(p_sem->blocked, print_pcb, NULL);
+        } else {
+            printf(" None\n");
+        }
+    }
 }
 
 static bool invalid_init_id(uint32_t id){
@@ -110,4 +135,10 @@ static void block_process(pcb* p_pcb, semaphore* p_sem){
     pcb_set_state(p_pcb, STATE_BLOCKED);
     pcb_set_location(p_pcb, pBlocked_list);
     List_prepend(pBlocked_list, p_pcb);
+}
+
+static bool print_pcb(void* item0, void* item1){
+    printf("\t");
+    pcb_print_all_info(item0);
+    return 0;
 }

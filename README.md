@@ -25,3 +25,9 @@ A process may continually win arbitration when they are the only process of that
 * exiting the init process will cause termination when it is the only process
 * the init process will only recieve arbitration if every other process is blocked
 * TODO OTHER INIT INTERACTIONS
+
+## TODO
+* messages
+* ready when current proces is init with semaphores
+* init semaphore interaction
+

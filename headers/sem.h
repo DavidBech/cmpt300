@@ -25,12 +25,12 @@ void semaphore_init();
 //  return: 0 success
 bool semaphore_new(uint32_t id, uint32_t value);
 
-// increment semaphore
+// increment semaphore potentially adding a waked process to ready queue
 //  return: 1 failure
 //  return: 0 success
 bool semaphore_v(uint32_t id);
 
-// decrament sem
+// decrament sem pCaller may be blocked after this call 
 //  return: 1 failure
 //  return: 0 success
 bool semaphore_p(uint32_t id, pcb* pCaller);

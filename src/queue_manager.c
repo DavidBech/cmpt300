@@ -18,7 +18,7 @@ const char* queue_manager_list_names[] = {"Ready (high)",
                                           "Ready (norm)", 
                                           "Ready  (low)", 
                                           "Blocked (send)", 
-                                          "Blocked  (Rec)"};
+                                          "Blocked (rec)"};
 
 void queue_manager_init(void){
     pReady_high = List_create();
@@ -102,20 +102,24 @@ bool queue_manager_remove(pcb* p_pcb){
 pcb* queue_manager_get_next_ready_exempt(pcb* exempted_process){
     queue_manager_add_ready(exempted_process);
     pcb* cur = queue_manager_get_next_ready();
-    pcb_set_state(cur, STATE_RUNNING);
+    
     return cur;
 }
 
 pcb* queue_manager_get_next_ready(void){
+    pcb* p_pcb = NULL;
     if(List_count(pReady_high)){
-        return List_trim(pReady_high);
+        p_pcb = List_trim(pReady_high);
+        pcb_set_state(p_pcb, STATE_RUNNING);    
     } else if(List_count(pReady_norm)){
-        return List_trim(pReady_norm);
+        p_pcb = List_trim(pReady_norm);
+        pcb_set_state(p_pcb, STATE_RUNNING);    
     } else if(List_count(pReady_low)){
-        return List_trim(pReady_low);
+        p_pcb = List_trim(pReady_low);
+        pcb_set_state(p_pcb, STATE_RUNNING);    
     }
     // all ready queues empty
-    return NULL;
+    return p_pcb;
 }
 
 void queue_manager_print_info(){

@@ -71,6 +71,7 @@ bool executioner_create(uint32_t prio){
         return KERNEL_SIM_FAILURE;
     }
     pcb *p_pcb = &pcb_array[pid];
+    pcb_init(p_pcb, pid, prio, STATE_READY);
     queue_manager_add_ready(p_pcb);
     printf("Created New Process: ");
     pcb_print_all_info(p_pcb);
@@ -182,18 +183,35 @@ bool executioner_reply(uint32_t pid, char* msg){
 }
 
 bool executioner_semaphore_new(uint32_t sem_id, uint32_t init_value){ 
-    fprintf(stderr, "Not Implemented\n");
-    return KERNEL_SIM_FAILURE;
+    return semaphore_new(sem_id, init_value);
 }
 
 bool executioner_semaphore_p(uint32_t sem_id){ 
-    fprintf(stderr, "Not Implemented\n");
-    return KERNEL_SIM_FAILURE;
+    if(current_process == init_process){
+        printf("TODO not handled init\n");
+        return KERNEL_SIM_FAILURE;
+    }
+    if(semaphore_p(sem_id, current_process)){
+        return KERNEL_SIM_FAILURE;
+    }
+    if(pcb_get_state(current_process) == STATE_BLOCKED){
+        current_process = queue_manager_get_next_ready();
+        if(!current_process){
+            current_process = init_process;
+            pcb_set_state(init_process, STATE_RUNNING);
+        }
+        printf("New running Process: ");
+        print_current_proc_info();
+    }
+    return KERNEL_SIM_SUCCESS;
 }
 
 bool executioner_semaphore_v(uint32_t sem_id){ 
-    fprintf(stderr, "Not Implemented\n");
-    return KERNEL_SIM_FAILURE;
+    if(current_process == init_process){
+        printf("TODO not handled init\n");
+        return KERNEL_SIM_FAILURE;
+    }
+    return semaphore_v(sem_id);
 }
 
 bool executioner_procinfo(uint32_t pid){ 
