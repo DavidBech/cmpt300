@@ -10,7 +10,7 @@
 //  -- This file defines an api for creation/deletion/modification to pcb structure
 
 // Max IPC message to fit in PCB, this include \0 terminator
-#define PCB_ICP_MESSAGE_SIZE 40
+#define PCB_ICP_MESSAGE_SIZE 41
 // Minimum PID value
 #define PCB_MIN_PID 0
 // Maximum PID value
@@ -50,10 +50,10 @@ struct pcb_s {
         uint32_t in_use   :  1;
         uint32_t reserved : 11;
     } field;
-    // Process IPC Message
-    char message[PCB_ICP_MESSAGE_SIZE];
     // Process Location 
     List* location;
+    // Process IPC Message
+    char message[PCB_ICP_MESSAGE_SIZE];
 };
 
 // Sets the current location

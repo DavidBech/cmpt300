@@ -56,12 +56,13 @@ void executioner_init(){
     pcb_init(init_process, init_pid, PRIO_INIT, STATE_RUNNING);
     pcb_set_location(init_process, PCB_INIT_LOC);
     current_process = init_process;
-    printf("Created Init Process\n");
+    printf("Created Init Process:\n\t");
+    print_current_proc_info();
 }
 
 bool executioner_create(uint32_t prio){
     if(prio > 2 || prio < 0){
-        printf("Invalid priority %d aborting create command\n", prio);
+        printf("Invalid priority (%d) aborting create command\n", prio);
         return KERNEL_SIM_FAILURE;
     }
     uint32_t pid = get_next_pid();
@@ -73,15 +74,14 @@ bool executioner_create(uint32_t prio){
     pcb *p_pcb = &pcb_array[pid];
     pcb_init(p_pcb, pid, prio, STATE_READY);
     queue_manager_add_ready(p_pcb);
-    printf("Created New Process: ");
+    printf("Created New Process: \n\t");
     pcb_print_all_info(p_pcb);
     if(current_process == init_process){
         current_process = queue_manager_get_next_ready();
-        pcb_set_state(current_process, STATE_RUNNING);
         pcb_set_state(init_process, STATE_READY);
-        printf("Previous Process: ");
+        printf("Previous Process was init process it is now exempted: \n\t");
         pcb_print_all_info(init_process);
-        printf("Current Process: ");
+        printf("Current Process: \n\t");
         print_current_proc_info();
     }
     ++process_count;
@@ -96,9 +96,8 @@ bool executioner_fork(void){
     uint32_t new_pid = get_next_pid();
     pcb* new_pcb = &pcb_array[new_pid];
     pcb_clone(new_pcb, current_process, new_pid);
-    pcb_set_state(new_pcb, STATE_READY);
     queue_manager_add_ready(new_pcb);
-    printf("Created New Process: ");
+    printf("Forked New Process: ");
     pcb_print_all_info(new_pcb);
     ++process_count;
     return KERNEL_SIM_FAILURE;
@@ -145,31 +144,29 @@ bool executioner_exit(void){
     printf("Exited Current Process\n");
 
     // Get the next process to execute
-    pcb* temp = queue_manager_get_next_ready();
-    if(temp == NULL){
+    current_process = queue_manager_get_next_ready();
+    if(!current_process){
         current_process = init_process;
-    } else {
-        current_process = temp;
-    }
-    pcb_set_state(current_process, STATE_RUNNING);
-    printf("Current Process: ");
+        pcb_set_state(current_process, STATE_RUNNING);
+    }    
+    printf("New Current Process: \n\t");
     print_current_proc_info();
     --process_count;
     return KERNEL_SIM_SUCCESS;
 }
 
 bool executioner_quantum(void){
-    if(current_process == init_process){
-        if(queue_manager_any_non_empty()){
-            fprintf(stderr, "Invalid State reached\n");
-            current_process = queue_manager_get_next_ready();
-            pcb_set_state(init_process, STATE_READY);
-        }
+    if(current_process == init_process && queue_manager_any_non_empty()){
+        fprintf(stderr, "Invalid State reached init is current process with process in ready queue\n");
+        current_process = queue_manager_get_next_ready();
+        printf("New Current Process: ");
+        print_current_proc_info();    
+        return KERNEL_SIM_SUCCESS;
     }
-    printf("Previous Current Process: ");
+    printf("Previous Current Process: \n\t");
     print_current_proc_info();
     current_process = queue_manager_get_next_ready_exempt(current_process);
-    printf("New Current Process: ");
+    printf("New Current Process: \n\t");
     print_current_proc_info();
     return KERNEL_SIM_SUCCESS;
 }
@@ -197,16 +194,19 @@ bool executioner_semaphore_p(uint32_t sem_id){
     if(semaphore_p(sem_id, current_process)){
         return KERNEL_SIM_FAILURE;
     }
+    // if the current process was blocked need to exempt it
     if(pcb_get_state(current_process) == STATE_BLOCKED){
         if(current_process == init_process){
-            pcb_set_state(init_process, STATE_READY);
+            // Init process cannot be blocked
+            pcb_set_state(init_process, STATE_RUNNING);
         } else {
+            // Atempt to get a new process from ready queues
             current_process = queue_manager_get_next_ready();
             if(!current_process){
                 current_process = init_process;
                 pcb_set_state(init_process, STATE_RUNNING);
             }
-            printf("New running Process: ");
+            printf("New Current Process: \n\t");
             print_current_proc_info();
         }
     }
@@ -223,7 +223,7 @@ bool executioner_semaphore_v(uint32_t sem_id){
         if(readied){
             pcb_set_state(init_process, STATE_READY);
             current_process = readied;
-            printf("Init process readied process switching to readied\nCurrent Process:");
+            printf("Init process readied process switching to readied\nCurrent Process:\n\t");
             print_current_proc_info();
         }
     }

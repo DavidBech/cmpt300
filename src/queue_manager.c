@@ -39,17 +39,19 @@ void queue_manager_init(void){
 
 bool queue_manager_add_ready(pcb* p_pcb){
     int prio = pcb_get_priority(p_pcb);
-    pcb_set_state(p_pcb, STATE_READY);
     switch(prio){
         case(PRIO_HIGH): 
+            pcb_set_state(p_pcb, STATE_READY);
             List_prepend(pReady_high, p_pcb);
             pcb_set_location(p_pcb, pReady_high);
             break;
         case(PRIO_NORMAL):
+            pcb_set_state(p_pcb, STATE_READY);
             List_prepend(pReady_norm, p_pcb);
             pcb_set_location(p_pcb, pReady_norm);
             break;
         case(PRIO_LOW):
+            pcb_set_state(p_pcb, STATE_READY);
             List_prepend(pReady_low, p_pcb);
             pcb_set_location(p_pcb, pReady_low);
             break;

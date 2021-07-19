@@ -42,8 +42,11 @@ By: David Bechert
 
 ## Assumptions Made
 
-- RR Arbiter Priority:
+- RR Arbiter Priority
   - A process may continually win arbitration when they are the only process of that priority even if there are other processes of a lower priority
+- Exemption in the Creation Command
+  - When a new process is created through the create command and the current process is init it exempts the init process
+  - When a new process is created with a higher priority than current process it **does not** exempt the current process
 - Command Case
   - A command can be both upper and lower case
 
@@ -51,14 +54,15 @@ By: David Bechert
 
 - pid is always 0
 - info messages will state that the init is located on the "Init" queue regardless of its state
-- the total info printout will display the init process separately when it isn't the current process
-- attempting to fork the init process will result in error
-- killing the init process will cause termination when it is the only process
-- exiting the init process will cause termination when it is the only process
-- the init process will only recieve arbitration if every other process is blocked
+- the total info printout will display it separately when it isn't the current process
+- attempting to fork will result in error
+- killing or exiting will cause termination when it is the only process
+- will only recieve arbitration if every other process is blocked
+- the init process may be "blocked" on multiple semaphores as well as multiple times on the same semaphore
 - TODO OTHER INIT INTERACTIONS
 
 ## TODO
 
 - messages
 - test code
+- Change order of iteration for print all info on lists
