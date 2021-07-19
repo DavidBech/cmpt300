@@ -23,11 +23,24 @@ static unsigned process_count = 1;
 
 // TODO TEST OUT OF PIDs
 // Static Functions
+
+// gets the next valid pid
 static int get_next_pid();
+
+// returns the input pid to the pool of available pids
 static void free_pid(int pid_to_free);
+
+// prints out the current processes info
 static void print_current_proc_info();
+
+// checks condidtions for termination and does so if they all pass
 static bool termination();
+
+// removes the pcb from its queue to free it
 static bool remove_from_queue(pcb* p_pcb);
+
+// checks if the input pid belongs to a running process
+static bool pid_in_use(uint32_t pid);
 
 void executioner_init(){
     assert(PCB_MIN_PID == 0);
@@ -91,8 +104,7 @@ bool executioner_fork(void){
 }
 
 bool executioner_kill(uint32_t pid){ 
-    pcb* pcb = &pcb_array[pid];
-    if(pcb_array[pid].field.in_use == 0){
+    if(pid_in_use(pid)){
         printf("The input pid:%#04x does not map to a current created process\n", pid);
         return KERNEL_SIM_FAILURE;
     }
@@ -102,6 +114,7 @@ bool executioner_kill(uint32_t pid){
         }
         assert(false);
     }
+    pcb* pcb = &pcb_array[pid];
     if(pcb == current_process){
         return executioner_exit();
     }
@@ -184,8 +197,12 @@ bool executioner_semaphore_v(uint32_t sem_id){
 }
 
 bool executioner_procinfo(uint32_t pid){ 
-    fprintf(stderr, "Not Implemented\n");
-    return KERNEL_SIM_FAILURE;
+    if(pid_in_use(pid)){
+        printf("The input pid:%#04x does not map to a current created process\n", pid);
+        return KERNEL_SIM_FAILURE;
+    }
+    pcb_print_all_info(&pcb_array[pid]);
+    return KERNEL_SIM_SUCCESS;
 }
 
 bool executioner_totalinfo(void){ 
@@ -223,11 +240,11 @@ static bool termination(){
         return 1;
     }
     if(semaphore_any_blocked()){
-        printf("Termination Canceled Process Blocked on Semaphore");
+        printf("Termination Canceled Process Blocked on Semaphore\n");
         return 1;
     } 
     if(queue_manager_any_non_empty()){
-        printf("Termination Canceled Process on Ready or Blocked Queues");
+        printf("Termination Canceled Process on Ready or Blocked Queues\n");
         return 1;
     }
     printf("Termination Proceding\n");
@@ -241,6 +258,14 @@ static bool remove_from_queue(pcb* pPcb){
         if(semaphore_remove_blocked_pcb(pPcb)){
             return KERNEL_SIM_FAILURE;
         }
+    }
+    return KERNEL_SIM_SUCCESS;
+}
+
+static bool pid_in_use(uint32_t pid){
+    pcb* pcb = &pcb_array[pid];
+    if(pcb->field.in_use == 0){
+        return KERNEL_SIM_FAILURE;
     }
     return KERNEL_SIM_SUCCESS;
 }

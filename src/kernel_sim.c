@@ -120,9 +120,9 @@ static void kernel_sim_interpreter_loop(void){
             case('Q'):
                 printf("Q: Quantum Command\n");
                 if(executioner_quantum()){
-                    // TODO failure
+                    printf("Quantum Command Completed with error\n");
                 } else {
-                    // TODO success
+                    printf("Quantum Command Completed\n");
                 }
                 break;
             case('S'):
@@ -195,9 +195,9 @@ static void kernel_sim_interpreter_loop(void){
                 printf("Enter process ID to display info of: ");
                 int info_pid = get_input_int();
                 if(executioner_procinfo(info_pid)){
-                    // TODO failure
+                    printf("Procinfo Command Completed with error\n");
                 } else {
-                    // TODO success
+                    printf("Procinfo Command Completed\n");
                 }
                 break;
             case('T'):
