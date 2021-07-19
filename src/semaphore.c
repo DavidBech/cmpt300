@@ -26,6 +26,10 @@ bool semaphore_any_blocked(){
     return 0;
 }
 
+bool semaphore_remove_blocked_pcb(pcb* p_pcb){
+    return 1;
+}
+
 void semaphore_print_all_info(){
     printf("Semaphores\n");
     printf("\t TODO\n");

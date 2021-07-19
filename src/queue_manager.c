@@ -85,7 +85,7 @@ bool queue_manager_any_non_empty(){
 
 bool queue_manager_remove(pcb* p_pcb){
     List* pLoc_pcb = pcb_get_location(p_pcb);
-    if(pLoc_pcb == NULL){
+    if(queue_manager_list_hash(pLoc_pcb) == INVALID_HASH){
         return KERNEL_SIM_FAILURE;
     }
     List_first(pLoc_pcb);
@@ -94,10 +94,9 @@ bool queue_manager_remove(pcb* p_pcb){
         List_remove(pLoc_pcb);
         return  KERNEL_SIM_SUCCESS;
     } else {
-        // not found
+        // not found TODO should never get here
         return KERNEL_SIM_FAILURE;
     }
-    return KERNEL_SIM_SUCCESS;
 }
 
 pcb* queue_manager_get_next_ready_exempt(pcb* exempted_process){

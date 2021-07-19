@@ -19,7 +19,7 @@ static struct pid_stack_s{
 static const uint32_t init_pid = PCB_MIN_PID;
 static pcb* init_process;
 static pcb pcb_array[PCB_MAX_PID];
-static unsigned process_count;
+static unsigned process_count = 1;
 
 // TODO TEST OUT OF PIDs
 // Static Functions
@@ -105,8 +105,11 @@ bool executioner_kill(uint32_t pid){
     if(pcb == current_process){
         return executioner_exit();
     }
+    if(remove_from_queue(pcb)){
+        printf("Could not kill the process\n");
+        return KERNEL_SIM_FAILURE;
+    }
 
-    remove_from_queue(pcb);
     printf("Terminating Process: ");
     pcb_print_all_info(pcb);
     free_pid(pid);
@@ -182,6 +185,7 @@ bool executioner_procinfo(uint32_t pid){
 }
 
 bool executioner_totalinfo(void){ 
+    printf("%u total processes currently in use\n", process_count);
     printf("Running Process: ");
     print_current_proc_info();
     if(current_process != init_process){
@@ -229,5 +233,10 @@ static bool termination(){
 }
 
 static bool remove_from_queue(pcb* pPcb){
-    return 1;
+    if(queue_manager_remove(pPcb)){
+        if(semaphore_remove_blocked_pcb(pPcb)){
+            return KERNEL_SIM_FAILURE;
+        }
+    }
+    return KERNEL_SIM_SUCCESS;
 }
