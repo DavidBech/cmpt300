@@ -53,7 +53,7 @@ void executioner_init(){
     memset(pcb_array, 0, sizeof(pcb_array));
     get_next_pid(); //remove init pid
     init_process = &pcb_array[init_pid];
-    pcb_init(init_process, init_pid, STATE_RUNNING, PRIO_INIT);
+    pcb_init(init_process, init_pid, PRIO_INIT, STATE_RUNNING);
     pcb_set_location(init_process, PCB_INIT_LOC);
     current_process = init_process;
     printf("Created Init Process\n");
@@ -158,7 +158,14 @@ bool executioner_exit(void){
     return KERNEL_SIM_SUCCESS;
 }
 
-bool executioner_quantum(void){ 
+bool executioner_quantum(void){
+    if(current_process == init_process){
+        if(queue_manager_any_non_empty()){
+            fprintf(stderr, "Invalid State reached\n");
+            current_process = queue_manager_get_next_ready();
+            pcb_set_state(init_process, STATE_READY);
+        }
+    }
     printf("Previous Current Process: ");
     print_current_proc_info();
     current_process = queue_manager_get_next_ready_exempt(current_process);
@@ -187,31 +194,40 @@ bool executioner_semaphore_new(uint32_t sem_id, uint32_t init_value){
 }
 
 bool executioner_semaphore_p(uint32_t sem_id){ 
-    if(current_process == init_process){
-        printf("TODO not handled init\n");
-        return KERNEL_SIM_FAILURE;
-    }
     if(semaphore_p(sem_id, current_process)){
         return KERNEL_SIM_FAILURE;
     }
     if(pcb_get_state(current_process) == STATE_BLOCKED){
-        current_process = queue_manager_get_next_ready();
-        if(!current_process){
-            current_process = init_process;
-            pcb_set_state(init_process, STATE_RUNNING);
+        if(current_process == init_process){
+            pcb_set_state(init_process, STATE_READY);
+        } else {
+            current_process = queue_manager_get_next_ready();
+            if(!current_process){
+                current_process = init_process;
+                pcb_set_state(init_process, STATE_RUNNING);
+            }
+            printf("New running Process: ");
+            print_current_proc_info();
         }
-        printf("New running Process: ");
-        print_current_proc_info();
     }
     return KERNEL_SIM_SUCCESS;
 }
 
 bool executioner_semaphore_v(uint32_t sem_id){ 
-    if(current_process == init_process){
-        printf("TODO not handled init\n");
+    if(semaphore_v(sem_id)){
         return KERNEL_SIM_FAILURE;
     }
-    return semaphore_v(sem_id);
+    if(current_process == init_process){
+        // Check if a process was readied up
+        pcb* readied = queue_manager_get_next_ready();
+        if(readied){
+            pcb_set_state(init_process, STATE_READY);
+            current_process = readied;
+            printf("Init process readied process switching to readied\nCurrent Process:");
+            print_current_proc_info();
+        }
+    }
+    return KERNEL_SIM_SUCCESS;
 }
 
 bool executioner_procinfo(uint32_t pid){ 
@@ -224,11 +240,11 @@ bool executioner_procinfo(uint32_t pid){
 }
 
 bool executioner_totalinfo(void){ 
-    printf("%u total processes currently in use\n", process_count);
-    printf("Running Process: ");
+    printf("Processes In Use: %u\n", process_count);
+    printf("Running Process: \n\t");
     print_current_proc_info();
     if(current_process != init_process){
-        printf("Init Process: ");
+        printf("Init Process: \n\t");
         pcb_print_all_info(init_process);
     }
     queue_manager_print_info();

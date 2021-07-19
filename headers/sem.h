@@ -8,13 +8,16 @@
 #define __SEMAPHORE_H_
 
 #define SEMAPHORE_NUM 5
+extern const char* semaphore_queue_names[];
 
 typedef struct semaphore_s semaphore;
 struct semaphore_s {
     int value;
     List* blocked;
     uint8_t id;
+    uint8_t init_count;
     bool init;
+    
 };
 
 // Initalize the semaphore module
@@ -53,4 +56,5 @@ bool semaphore_any_blocked();
 // Prints all semaphore info
 void semaphore_print_all_info(void);
 
+int semaphore_list_hash(List* loc);
 #endif

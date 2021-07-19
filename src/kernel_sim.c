@@ -83,51 +83,51 @@ static void kernel_sim_interpreter_loop(void){
         }
         switch(command){
             case('C'):
-                printf("C: Create Command\n");
+                printf("===== C: Create Command =====\n");
                 printf("Enter Priority (0=high, 1=norm, 2=low): ");
                 int prio = get_input_small_int();
                 if(executioner_create(prio)){
-                    printf("Create Command Completed with error\n");
+                    printf("===== Create Command Completed with error =====\n\n");
                 } else {
-                    printf("Create Command Completed\n");
+                    printf("===== Create Command Completed =====\n\n");
                 }
                 break;
             case('F'):
-                printf("F: Fork Command\n");
+                printf("===== F: Fork Command =====\n");
                 if(executioner_fork()){
-                    printf("Fork Command Completed with error\n");
+                    printf("===== Fork Command Completed with error =====\n\n");
                 } else {
-                    printf("Fork Command Completed\n");
+                    printf("===== Fork Command Completed =====\n\n");
                 }
                 break;
             case('K'):
-                printf("K: Kill Command\n");
+                printf("===== K: Kill Command =====\n");
                 printf("Enter the process ID to kill: ");
                 int kill_pid = get_input_int();
                 if(executioner_kill(kill_pid)){
-                    printf("Kill Command Completed with error\n");
+                    printf("===== Kill Command Completed with error =====\n\n");
                 } else {
-                    printf("Kill Command Completed\n");
+                    printf("===== Kill Command Completed =====\n\n");
                 }
                 break;
             case('E'):
-                printf("E: Exit Command\n");
+                printf("===== E: Exit Command =====\n");
                 if(executioner_exit()){
-                    printf("Exit Command Completed with error\n");
+                    printf("===== Exit Command Completed with error\n");
                 } else {
-                    printf("Exit Command Completed\n");
+                    printf("===== Exit Command Completed =====\n\n");
                 }
                 break;
             case('Q'):
-                printf("Q: Quantum Command\n");
+                printf("===== Q: Quantum Command =====\n");
                 if(executioner_quantum()){
-                    printf("Quantum Command Completed with error\n");
+                    printf("===== Quantum Command Completed with error\n");
                 } else {
-                    printf("Quantum Command Completed\n");
+                    printf("===== Quantum Command Completed =====\n\n");
                 }
                 break;
             case('S'):
-                printf("S: Send Command\n");
+                printf("===== S: Send Command =====\n");
                 printf("Enter the process ID to send message to: ");
                 int process_send = get_input_int();
                 printf("Enter the message to send (max 40 chars): ");
@@ -139,7 +139,7 @@ static void kernel_sim_interpreter_loop(void){
                 }
                 break;
             case('R'):
-                printf("R: Receive Command\n");
+                printf("===== R: Receive Command =====\n");
                 if(executioner_receive()){
                     // TODO failure
                 } else {
@@ -147,10 +147,10 @@ static void kernel_sim_interpreter_loop(void){
                 }
                 break;
             case('Y'):
-                printf("Y: Reply Command\n");
-                printf("Enter the process ID to reply to: ");
+                printf("===== Y: Reply Command =====\n");
+                printf("===== Enter the process ID to reply to: ");
                 int process_reply = get_input_int();
-                printf("Enter the message to send (max 40 chars): ");
+                printf("===== Enter the message to send (max 40 chars): ");
                 char msg_reply[PCB_ICP_MESSAGE_SIZE];
                 get_input_message(msg_reply);
                 if(executioner_reply(process_reply, msg_reply)){
@@ -160,53 +160,53 @@ static void kernel_sim_interpreter_loop(void){
                 }
                 break;
             case('N'):
-                printf("N: New Semaphore Command\n");
-                printf("Enter the semaphore ID to create (0 to 4): ");
+                printf("===== N: New Semaphore Command =====\n");
+                printf("===== Enter the semaphore ID to create (0 to 4): ");
                 int semaphore_new_id = get_input_small_int();
-                printf("Enter the semaphore's initial input value ( >= 0): ");
+                printf("===== Enter the semaphore's initial input value ( >= 0): ");
                 unsigned init_value = get_input_int();
                 if(executioner_semaphore_new(semaphore_new_id, init_value)){
-                    // TODO failure
+                    printf("===== Semaphore New Command Completed with error =====\n\n");
                 } else {
-                    // TODO success
+                    printf("===== Semaphore New Command Completed =====\n\n");
                 }
                 break;
             case('P'):
-                printf("P: P Semaphore Command\n");
+                printf("===== P: P Semaphore Command =====\n");
                 printf("Enter the semaphore ID to p: ");
                 int semaphore_id_p = get_input_small_int();
                 if(executioner_semaphore_p(semaphore_id_p)){
-                    // TODO failure
+                    printf("===== Semaphore P Command Completed with error =====\n\n");
                 } else {
-                    // TODO success
+                    printf("===== Semaphore P Command Completed =====\n\n");
                 }
                 break;
             case('V'):
-                printf("V: V Semaphore Command\n");
-                printf("Enter the semaphore ID to v: ");
+                printf("===== V: V Semaphore Command =====\n");
+                printf("===== Enter the semaphore ID to v: ");
                 int semaphore_id_v = get_input_small_int();
                 if(executioner_semaphore_v(semaphore_id_v)){
-                    // TODO failure
+                    printf("===== Semaphore V Command Completed with error =====\n\n");
                 } else {
-                    // TODO success
+                    printf("===== Semaphore V Command Completed =====\n\n");
                 }
                 break;
             case('I'):
-                printf("I: Procinfo Command\n");
-                printf("Enter process ID to display info of: ");
+                printf("===== I: Procinfo Command\n");
+                printf("===== Enter process ID to display info of: ");
                 int info_pid = get_input_int();
                 if(executioner_procinfo(info_pid)){
-                    printf("Procinfo Command Completed with error\n");
+                    printf("===== Procinfo Command Completed with error =====\n\n");
                 } else {
-                    printf("Procinfo Command Completed\n");
+                    printf("===== Procinfo Command Completed =====\n\n");
                 }
                 break;
             case('T'):
-                printf("T: Totalinfo Command\n");
+                printf("===== T: Totalinfo Command =====\n");
                 if(executioner_totalinfo()){
-                    printf("Totalinfo Command Completed with error\n");
+                    printf("===== Totalinfo Command Completed with error =====\n\n");
                 } else {
-                    printf("Totalinfo Command Completed\n");
+                    printf("===== Totalinfo Command Completed =====\n\n");
                 }
                 break;
             case('!'):
@@ -214,7 +214,7 @@ static void kernel_sim_interpreter_loop(void){
                 printf("!: Temparary Termination\n");
                 exit(0);
             default:
-                printf("%c: Inavlid Command\n", command);
+                printf("===== %c: Inavlid Command =====\n\n", command);
                 break;
         }
     }

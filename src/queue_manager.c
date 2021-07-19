@@ -102,7 +102,6 @@ bool queue_manager_remove(pcb* p_pcb){
 pcb* queue_manager_get_next_ready_exempt(pcb* exempted_process){
     queue_manager_add_ready(exempted_process);
     pcb* cur = queue_manager_get_next_ready();
-    
     return cur;
 }
 

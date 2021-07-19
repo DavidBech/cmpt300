@@ -39,12 +39,12 @@ bool queue_manager_any_non_empty();
 bool queue_manager_remove(pcb* p_pcb);
 
 // Adds the exempted_process to its ready queue returning the next
-//  process to execute
+//  process to execute setting its state to running
 //  return: the next process who's turn it is to be running which 
 //              could be the same as the exempted_process
 pcb* queue_manager_get_next_ready_exempt(pcb* exempted_process);
 
-// Gets the next process who's turn it to be running next,
+// Gets the next process who's turn it to be running next setting its state to running
 //  note, this process is removed from its ready queue
 //  return: the next process who's turn it is to be running
 //  return: NULL if no such process exists

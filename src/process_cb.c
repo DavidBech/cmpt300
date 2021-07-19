@@ -4,6 +4,7 @@
 
 #include "process_cb.h"
 #include "queue_manager.h"
+#include "sem.h"
 
 void pcb_init(pcb* pPcb, uint32_t pid, uint32_t prio, uint32_t state){
     pPcb->field.pid = pid;
@@ -73,13 +74,17 @@ void pcb_print_all_info(pcb* pPcb){
         list_location = "Init";
     } else {
         int loc = queue_manager_list_hash(pPcb->location);
-        // TODO ADD SEMAPHORE
         if(loc != -1){
             list_location = queue_manager_list_names[loc];
         } else {
-            list_location = "None";
+            loc = semaphore_list_hash(pPcb->location);
+            if(loc != -1){
+                list_location = semaphore_queue_names[loc];
+            } else {
+                list_location = "None";
+            }
+        }
     }
-}
     printf("PID: %#04x, Prio: %s, State: %s, Queue: %s, Message:%s;\n", 
         pPcb->field.pid, 
         pPcb->field.prio == PRIO_HIGH ? "high" : pPcb->field.prio == PRIO_NORMAL ? "norm" : pPcb->field.prio == PRIO_LOW ? " low" : "init", 

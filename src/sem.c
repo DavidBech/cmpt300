@@ -9,6 +9,8 @@
 #include "kernel_sim.h"
 #include "queue_manager.h"
 
+const char* semaphore_queue_names[] = {"sem0","sem1","sem2","sem3","sem4"};
+
 static semaphore sem_array[SEMAPHORE_NUM];
 
 // returns true on invalid semaphore id for initialized semaphores
@@ -56,16 +58,20 @@ bool semaphore_v(uint32_t id){
         return KERNEL_SIM_FAILURE;
     }
     semaphore* p_sem = &sem_array[id];
-    ++p_sem->value;
-    if(p_sem->value == 1 && List_count(p_sem->blocked)){
+    if(p_sem->value == 0 && List_count(p_sem->blocked)){
         // Wake Blocked process on sem
         pcb* p_waked = List_trim(p_sem->blocked);
-        queue_manager_add_ready(p_waked);
-        printf("Process readied: ");
-        pcb_print_all_info(p_waked);
-        --p_sem->value; // P operation for waked process
+        if(pcb_get_pid(p_waked) == 0){
+            // if waked is init process
+            --(p_sem->init_count);
+        } else {
+            queue_manager_add_ready(p_waked);
+            printf("Process readied: ");
+            pcb_print_all_info(p_waked);
+        }
     } else {
         // No blocked process
+        ++(p_sem->value);
         printf("New Semaphore value: %d\n", p_sem->value);
     }
     return KERNEL_SIM_SUCCESS;
@@ -126,6 +132,18 @@ void semaphore_print_all_info(){
     }
 }
 
+int semaphore_list_hash(List* loc){
+    if(loc == NULL){
+        return -1;
+    }
+    for(int i=0; i<SEMAPHORE_NUM; ++i){
+        if(loc == sem_array[i].blocked){
+            return i;
+        }
+    }
+    return -1;
+}
+
 static bool invalid_init_id(uint32_t id){
     return id < 0 || id >= SEMAPHORE_NUM || !sem_array[id].init;    
 }
@@ -133,7 +151,11 @@ static bool invalid_init_id(uint32_t id){
 static void block_process(pcb* p_pcb, semaphore* p_sem){
     List* pBlocked_list = p_sem->blocked;
     pcb_set_state(p_pcb, STATE_BLOCKED);
-    pcb_set_location(p_pcb, pBlocked_list);
+    if(pcb_get_pid(p_pcb) != 0){
+        pcb_set_location(p_pcb, pBlocked_list);
+    } else {
+        ++p_sem->init_count;
+    }
     List_prepend(pBlocked_list, p_pcb);
 }
 
