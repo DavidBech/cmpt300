@@ -36,6 +36,11 @@ bool semaphore_p(uint32_t id, pcb* pCaller);
 //  return: 0 otherwise
 bool semaphore_block_on_sem(pcb* pPcb);
 
+// removes a pcb blocked on any semaphore
+//  return: 1 if the pcb was not blocked on any semaphore
+//  return: 0 if the pcb was removed
+bool semaphore_remove_blocked_pcb(pcb* pPcb);
+
 // checks if any semaphore has a blocked pcb on it
 //  return: 1 if there is a blocked process
 //  return: 0 if no processes are blocked

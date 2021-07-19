@@ -15,7 +15,6 @@ void pcb_init(pcb* pPcb, uint32_t pid, uint32_t prio, uint32_t state){
 }
 
 bool pcb_clone(pcb* pPcb_new, pcb* pPcb_origional, uint32_t new_pid){
-    // TODO
     pPcb_new->field = pPcb_origional->field;
     pPcb_new->field.pid = new_pid;
     return PCB_PASS;

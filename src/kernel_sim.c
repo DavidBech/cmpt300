@@ -43,7 +43,22 @@ static int get_input_small_int(){
 }
 
 static int get_input_int(){
-    return 0xDEADBEEF;
+    int value = -1;
+    // Remove non number chars from stdin
+    char c = '\0';
+    while(!(c >= (int)'0' && c <= (int)'9')){
+        c = fgetc(stdin);
+    } 
+    // put number back on buffer
+    ungetc(c, stdin);
+    // Read number
+    while(value == -1){
+        char in_string[10];
+        char *ptr;
+        fgets(in_string, 10, stdin);
+        value = strtol(in_string, &ptr, 10);
+    }
+    return value;
 }
 
 static void get_input_message(){
@@ -60,23 +75,28 @@ static void kernel_sim_interpreter_loop(void){
             // TODO is there other blank space?
             continue;
         }
+        // Convert lower case to upper case
+        if(command >= 'a' && command <= 'z'){
+            command -= 'a';
+            command += 'A';
+        }
         switch(command){
             case('C'):
                 printf("C: Create Command\n");
                 printf("Enter Priority (0=high, 1=norm, 2=low): ");
                 int prio = get_input_small_int();
                 if(executioner_create(prio)){
-                    printf("Create Command Complete with error\n");
+                    printf("Create Command Completed with error\n");
                 } else {
-                    printf("Create Command Complete\n");
+                    printf("Create Command Completed\n");
                 }
                 break;
             case('F'):
                 printf("F: Fork Command\n");
                 if(executioner_fork()){
-                    // TODO failure
+                    printf("Fork Command Completed with error\n");
                 } else {
-                    // TODO success
+                    printf("Fork Command Completed\n");
                 }
                 break;
             case('K'):
@@ -84,17 +104,17 @@ static void kernel_sim_interpreter_loop(void){
                 printf("Enter the process ID to kill: ");
                 int kill_pid = get_input_int();
                 if(executioner_kill(kill_pid)){
-                    // TODO failure
+                    printf("Kill Command Completed with error\n");
                 } else {
-                    // TODO success
+                    printf("Kill Command Completed\n");
                 }
                 break;
             case('E'):
                 printf("E: Exit Command\n");
                 if(executioner_exit()){
-                    // TODO failure
+                    printf("Exit Command Completed with error\n");
                 } else {
-                    // TODO success
+                    printf("Exit Command Completed\n");
                 }
                 break;
             case('Q'):
@@ -183,9 +203,9 @@ static void kernel_sim_interpreter_loop(void){
             case('T'):
                 printf("T: Totalinfo Command\n");
                 if(executioner_totalinfo()){
-                    // TODO failure
+                    printf("Totalinfo Command Completed with error\n");
                 } else {
-                    // TODO success
+                    printf("Totalinfo Command Completed\n");
                 }
                 break;
             case('!'):

@@ -19,6 +19,7 @@ static struct pid_stack_s{
 static const uint32_t init_pid = PCB_MIN_PID;
 static pcb* init_process;
 static pcb pcb_array[PCB_MAX_PID];
+static unsigned process_count;
 
 // TODO TEST OUT OF PIDs
 // Static Functions
@@ -26,6 +27,7 @@ static int get_next_pid();
 static void free_pid(int pid_to_free);
 static void print_current_proc_info();
 static bool termination();
+static bool remove_from_queue(pcb* p_pcb);
 
 void executioner_init(){
     assert(PCB_MIN_PID == 0);
@@ -68,24 +70,48 @@ bool executioner_create(uint32_t prio){
         printf("Current Process: ");
         print_current_proc_info();
     }
+    ++process_count;
     return KERNEL_SIM_SUCCESS;
 }
 
 bool executioner_fork(void){
-    // TODO
-    fprintf(stderr, "Not Implemented\n");
+    if(current_process == init_process){
+        printf("Failure Cannot fork the init process\n");
+        return KERNEL_SIM_FAILURE;
+    }
+    uint32_t new_pid = get_next_pid();
+    pcb* new_pcb = &pcb_array[new_pid];
+    pcb_clone(new_pcb, current_process, new_pid);
+    pcb_set_state(new_pcb, STATE_READY);
+    queue_manager_add_ready(new_pcb);
+    printf("Created New Process: ");
+    pcb_print_all_info(new_pcb);
+    ++process_count;
     return KERNEL_SIM_FAILURE;
 }
 
 bool executioner_kill(uint32_t pid){ 
-    // TODO
-    if(pid == init_pid){
-        // TODO 
-        fprintf(stderr, "Not Implemented\n");
+    pcb* pcb = &pcb_array[pid];
+    if(pcb_array[pid].field.in_use == 0){
+        printf("The input pid:%#04x does not map to a current created process\n", pid);
         return KERNEL_SIM_FAILURE;
     }
-    queue_manager_remove(&pcb_array[pid]);
+    if(pid == init_pid){
+        if(termination()){
+            return KERNEL_SIM_FAILURE;
+        }
+        assert(false);
+    }
+    if(pcb == current_process){
+        return executioner_exit();
+    }
+
+    remove_from_queue(pcb);
+    printf("Terminating Process: ");
+    pcb_print_all_info(pcb);
     free_pid(pid);
+    pcb_free(pcb);
+    --process_count;
     return KERNEL_SIM_SUCCESS;
 }
 
@@ -94,11 +120,12 @@ bool executioner_exit(void){
        if(termination()){
            return KERNEL_SIM_FAILURE;
        }
+       assert(false);
     }
     // Free current process
     free_pid(pcb_get_pid(current_process));
     pcb_free(current_process);
-    printf("Exited Process\n");
+    printf("Exited Current Process\n");
 
     // Get the next process to execute
     pcb* temp = queue_manager_get_next_ready();
@@ -110,6 +137,7 @@ bool executioner_exit(void){
     pcb_set_state(current_process, STATE_RUNNING);
     printf("Current Process: ");
     print_current_proc_info();
+    --process_count;
     return KERNEL_SIM_SUCCESS;
 }
 
@@ -195,6 +223,11 @@ static bool termination(){
         return 1;
     }
     printf("Termination Proceding\n");
-    exit(EXIT_SUCCESS);
+    assert(process_count == 0);
+    exit(EXIT_SUCCESS);// TODO CLEANUP? // TERMINATION FROM HERE?
     return 0;
+}
+
+static bool remove_from_queue(pcb* pPcb){
+    return 1;
 }
