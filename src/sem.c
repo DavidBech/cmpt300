@@ -7,11 +7,15 @@
 #include "sem.h"
 #include "process_cb.h"
 #include "kernel_sim.h"
+#include "queue_manager.h"
 
 static semaphore sem_array[SEMAPHORE_NUM];
 
 // returns true on invalid semaphore id for initialized semaphores
-static bool valid_init_id(uint32_t id);
+static bool invalid_init_id(uint32_t id);
+
+// Blocks the process on the semaphore
+static void block_process(pcb* p_pcb, semaphore* p_sem);
 
 void semaphore_init(){
     memset(&sem_array, 0, sizeof(sem_array));
@@ -43,13 +47,41 @@ bool semaphore_new(uint32_t id, uint32_t value){
     return KERNEL_SIM_SUCCESS;
 }
 
-bool semaphore_v(uint32_t id, pcb* pCaller){
-    return 1;
+bool semaphore_v(uint32_t id){
+    if(invalid_init_id(id)){
+        printf("Invalid semaphore id: %d\n", id);
+        return KERNEL_SIM_FAILURE;
+    }
+    semaphore* p_sem = &sem_array[id];
+    ++p_sem->value;
+    if(p_sem->value == 1 && List_count(p_sem->blocked)){
+        // Wake Blocked process on sem
+        pcb* p_waked = List_trim(p_sem->blocked);
+        pcb_set_state(p_waked, STATE_READY);
+        queue_manager_add_ready(p_waked);
+        printf("Process readied: ");
+        pcb_print_all_info(p_waked);
+        --p_sem->value; // P operation for waked process
+    } else {
+        // No blocked process
+        printf("New Semaphore value: %d\n", p_sem->value);
+    }
+    return KERNEL_SIM_SUCCESS;
 }
 
-
 bool semaphore_p(uint32_t id, pcb* pCaller){
-    return 1;
+    if(invalid_init_id(id)){
+        printf("Invalid semaphore id: %d\n", id);
+        return KERNEL_SIM_FAILURE;
+    }
+    semaphore* p_sem = &sem_array[id];
+    if(p_sem->value == 0){
+        printf("Semiphore is zero, blocking running process\n");
+        block_process(pCaller, p_sem);
+    } else {
+        --p_sem->value;
+    }
+    return KERNEL_SIM_SUCCESS;
 }
 
 bool semaphore_block_on_sem(pcb* pPcb){
@@ -69,7 +101,13 @@ void semaphore_print_all_info(){
     printf("\t TODO\n");
 }
 
-static bool valid_init_id(uint32_t id){
-    
+static bool invalid_init_id(uint32_t id){
+    return id < 0 || id >= SEMAPHORE_NUM || !sem_array[id].init;    
 }
 
+static void block_process(pcb* p_pcb, semaphore* p_sem){
+    List* pBlocked_list = p_sem->blocked;
+    pcb_set_state(p_pcb, STATE_BLOCKED);
+    pcb_set_location(p_pcb, pBlocked_list);
+    List_prepend(pBlocked_list, p_pcb);
+}

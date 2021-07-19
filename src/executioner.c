@@ -71,7 +71,6 @@ bool executioner_create(uint32_t prio){
         return KERNEL_SIM_FAILURE;
     }
     pcb *p_pcb = &pcb_array[pid];
-    pcb_init(p_pcb, pid, prio, STATE_READY);
     queue_manager_add_ready(p_pcb);
     printf("Created New Process: ");
     pcb_print_all_info(p_pcb);

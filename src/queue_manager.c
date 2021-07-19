@@ -31,7 +31,7 @@ void queue_manager_init(void){
         || pReady_low == NULL
         || pBlocked_send == NULL
         || pBlocked_receive == NULL){
-        fprintf(stderr, "At least one list is null\n");
+        fprintf(stderr, "At least one list is null in queue manager\n");
         exit(EXIT_FAILURE);
     }
     printf("Created Queues\n");
@@ -39,9 +39,7 @@ void queue_manager_init(void){
 
 bool queue_manager_add_ready(pcb* p_pcb){
     int prio = pcb_get_priority(p_pcb);
-    if(pcb_get_state(p_pcb) != STATE_READY){
-        return KERNEL_SIM_FAILURE;
-    }
+    pcb_set_state(p_pcb, STATE_READY);
     switch(prio){
         case(PRIO_HIGH): 
             List_prepend(pReady_high, p_pcb);
@@ -62,13 +60,15 @@ bool queue_manager_add_ready(pcb* p_pcb){
 }
 
 void queue_manager_add_block_send(pcb* p_pcb){
-    List_prepend(pBlocked_send, p_pcb);
+    pcb_set_state(p_pcb, STATE_BLOCKED);
     pcb_set_location(p_pcb, pBlocked_send);
+    List_prepend(pBlocked_send, p_pcb);
 }
 
 void queue_manager_add_block_recieve(pcb* p_pcb){
-    List_prepend(pBlocked_receive, p_pcb);
+    pcb_set_state(p_pcb, STATE_BLOCKED);
     pcb_set_location(p_pcb, pBlocked_receive);
+    List_prepend(pBlocked_receive, p_pcb);
 }
 
 bool queue_manager_any_non_empty(){
@@ -100,7 +100,6 @@ bool queue_manager_remove(pcb* p_pcb){
 }
 
 pcb* queue_manager_get_next_ready_exempt(pcb* exempted_process){
-    pcb_set_state(exempted_process, STATE_READY);
     queue_manager_add_ready(exempted_process);
     pcb* cur = queue_manager_get_next_ready();
     pcb_set_state(cur, STATE_RUNNING);

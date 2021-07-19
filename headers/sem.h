@@ -28,7 +28,7 @@ bool semaphore_new(uint32_t id, uint32_t value);
 // increment semaphore
 //  return: 1 failure
 //  return: 0 success
-bool semaphore_v(uint32_t id, pcb* pCaller);
+bool semaphore_v(uint32_t id);
 
 // decrament sem
 //  return: 1 failure
