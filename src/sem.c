@@ -9,7 +9,7 @@
 #include "kernel_sim.h"
 #include "queue_manager.h"
 
-const char* semaphore_queue_names[] = {"sem0","sem1","sem2","sem3","sem4"};
+const char* semaphore_queue_names[] = {"Sem0","Sem1","Sem2","Sem3","Sem4"};
 
 static semaphore sem_array[SEMAPHORE_NUM];
 
