@@ -6,7 +6,7 @@
 #include "executioner.h"
 #include "process_cb.h"
 #include "queue_manager.h"
-#include "semaphore.h"
+#include "sem.h"
 
 static char message_buffer[PCB_ICP_MESSAGE_SIZE];
 

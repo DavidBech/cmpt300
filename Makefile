@@ -29,8 +29,8 @@ valgrind: all
 	valgrind --leak-check=full --show-leak-kinds=all ./$(PROGNAME)
 
 # gcc Targets
-$(PROGNAME): $(OBJ_DIR)/main.o $(OBJ_DIR)/list.o $(OBJ_DIR)/process_cb.o $(OBJ_DIR)/kernel_sim.o $(OBJ_DIR)/executioner.o $(OBJ_DIR)/queue_manager.o $(OBJ_DIR)/semaphore.o
-	gcc $(local_LFLAGS) -o $(PROGNAME) $(OBJ_DIR)/main.o $(OBJ_DIR)/list.o $(OBJ_DIR)/kernel_sim.o $(OBJ_DIR)/executioner.o $(OBJ_DIR)/queue_manager.o $(OBJ_DIR)/process_cb.o $(OBJ_DIR)/semaphore.o
+$(PROGNAME): $(OBJ_DIR)/main.o $(OBJ_DIR)/list.o $(OBJ_DIR)/process_cb.o $(OBJ_DIR)/kernel_sim.o $(OBJ_DIR)/executioner.o $(OBJ_DIR)/queue_manager.o $(OBJ_DIR)/sem.o
+	gcc $(local_LFLAGS) -o $(PROGNAME) $(OBJ_DIR)/main.o $(OBJ_DIR)/list.o $(OBJ_DIR)/kernel_sim.o $(OBJ_DIR)/executioner.o $(OBJ_DIR)/queue_manager.o $(OBJ_DIR)/process_cb.o $(OBJ_DIR)/sem.o
 
 $(OBJ_DIR)/main.o: $(SRC_DIR)/main.c
 	gcc $(local_CFLAGS) -c $(SRC_DIR)/main.c -o $(OBJ_DIR)/main.o
@@ -50,8 +50,8 @@ $(OBJ_DIR)/executioner.o: $(SRC_DIR)/executioner.c
 $(OBJ_DIR)/queue_manager.o: $(SRC_DIR)/queue_manager.c
 	gcc $(local_CFLAGS) -c $(SRC_DIR)/queue_manager.c -o $(OBJ_DIR)/queue_manager.o 
 
-$(OBJ_DIR)/semaphore.o: $(SRC_DIR)/semaphore.c
-	gcc $(local_CFLAGS) -c $(SRC_DIR)/semaphore.c -o $(OBJ_DIR)/semaphore.o 
+$(OBJ_DIR)/sem.o: $(SRC_DIR)/sem.c
+	gcc $(local_CFLAGS) -c $(SRC_DIR)/sem.c -o $(OBJ_DIR)/sem.o 
 
 
 

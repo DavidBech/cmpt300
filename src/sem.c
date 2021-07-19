@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "semaphore.h"
+#include "sem.h"
 #include "process_cb.h"
 #include "kernel_sim.h"
 

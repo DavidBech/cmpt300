@@ -8,7 +8,7 @@
 #include "process_cb.h"
 #include "queue_manager.h"
 #include "kernel_sim.h"
-#include "semaphore.h"
+#include "sem.h"
 
 // Static Variables
 static pcb* current_process;
