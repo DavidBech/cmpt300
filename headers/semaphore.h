@@ -7,15 +7,19 @@
 #ifndef __SEMAPHORE_H_
 #define __SEMAPHORE_H_
 
-#define SEMAPHORE_MIN_ID 0
-#define SEMAPHORE_MAX_ID 4
+#define SEMAPHORE_NUM 5
 
 typedef struct semaphore_s semaphore;
 struct semaphore_s {
-    uint32_t id;
     int value;
     List* blocked;
+    uint8_t id;
+    bool init;
 };
+
+// Initalize the semaphore module
+void semaphore_init_startup();
+
 // Create new semaphore
 //  return: 1 failure
 //  return: 0 success

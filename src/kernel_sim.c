@@ -6,6 +6,7 @@
 #include "executioner.h"
 #include "process_cb.h"
 #include "queue_manager.h"
+#include "semaphore.h"
 
 static char message_buffer[PCB_ICP_MESSAGE_SIZE];
 
@@ -24,8 +25,9 @@ static int get_input_int();
 static void get_input_message();
 
 void kernel_sim_init(void){
-    executioner_init();
     queue_manager_init();
+    semaphore_init_startup();
+    executioner_init();
     kernel_sim_interpreter_loop();
 }
 
@@ -65,7 +67,6 @@ static void get_input_message(){
     fgets(message_buffer, PCB_ICP_MESSAGE_SIZE, stdin);
     //TODO -- error handling
 }
-
 
 static void kernel_sim_interpreter_loop(void){
     char command;
@@ -160,9 +161,9 @@ static void kernel_sim_interpreter_loop(void){
                 break;
             case('N'):
                 printf("N: New Semaphore Command\n");
-                printf("Enter the semaphore ID to create: ");
+                printf("Enter the semaphore ID to create (0 to 4): ");
                 int semaphore_new_id = get_input_small_int();
-                printf("Enter the semaphore's initial input value: ");
+                printf("Enter the semaphore's initial input value ( > 0): ");
                 unsigned init_value = get_input_int();
                 if(executioner_semaphore_new(semaphore_new_id, init_value)){
                     // TODO failure

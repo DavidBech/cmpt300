@@ -56,6 +56,7 @@ void executioner_init(){
     pcb_init(init_process, init_pid, STATE_RUNNING, PRIO_INIT);
     pcb_set_location(init_process, PCB_INIT_LOC);
     current_process = init_process;
+    printf("Created Init Process\n");
 }
 
 bool executioner_create(uint32_t prio){
