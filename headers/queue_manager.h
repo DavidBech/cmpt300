@@ -73,6 +73,9 @@ pcb* queue_manager_get_next_ready(void);
 // Prints all info about all queues
 void queue_manager_print_info();
 
+// Returns has for the list
 int queue_manager_list_hash();
 
+// Cleans up the queues
+void queue_manager_shutdown();
 #endif

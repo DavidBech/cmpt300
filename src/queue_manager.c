@@ -12,8 +12,8 @@ static List* pBlocked_send = NULL;
 static List* pBlocked_receive = NULL;
 
 static bool comapre_pcb_pointer(void* item0, void* item1);
-static bool print_pcb(void* item0, void* item1);
 static bool compare_message_pid(void* item0, void* item1);
+static void print_list(List* pList);
 
 const char* queue_manager_list_names[] = {"Ready (high)", 
                                           "Ready (norm)", 
@@ -149,46 +149,20 @@ bool queue_manager_check_blocked_on_send(pcb* p_pcb){
 
 void queue_manager_print_info(){
     printf("Queues: \n");
-    if(List_count(pReady_high)){
-        printf("Ready (high):\n");
-        List_first(pReady_high);
-        List_search(pReady_high, print_pcb, NULL);
-    } else {
-        printf("Ready (high): empty\n");
-    }
-
-    if(List_count(pReady_norm)){
-        printf("Ready (norm):\n");
-        List_first(pReady_norm);
-        List_search(pReady_norm, print_pcb, NULL);
-    } else {
-        printf("Ready (norm): empty\n");
-    }
+    printf("\tReady (high): ");
+    print_list(pReady_high);
     
-    if(List_count(pReady_low)){
-        printf("Ready (low):\n");
-        List_first(pReady_low);
-        List_search(pReady_low, print_pcb, NULL);
-    } else {
-        printf("Ready (low): empty\n");
-    }
+    printf("\tReady (norm): ");
+    print_list(pReady_norm);
+    
+    printf("\tReady (low): ");
+    print_list(pReady_low);
+    
+    printf("\tBlocked (send): ");
+    print_list(pBlocked_send);
 
-    if(List_count(pBlocked_send)){
-        printf("Blocked (send):\n");
-        List_first(pBlocked_send);
-        List_search(pBlocked_send, print_pcb, NULL);
-    } else {
-        printf("Blocked (send): empty\n");
-    }
-
-    if(List_count(pBlocked_receive)){
-        printf("Blocked (rec):\n");
-        List_first(pBlocked_receive);
-        List_search(pBlocked_receive, print_pcb, NULL);
-    } else {
-        printf("Blocked (rec): empty\n");
-    }
-
+    printf("\tBlocked (rec): ");
+    print_list(pBlocked_receive);
 }
 
 int queue_manager_list_hash(List* pList){
@@ -207,16 +181,35 @@ int queue_manager_list_hash(List* pList){
     }
 }
 
+void queue_manager_shutdown(){
+    List_free(pReady_high, pcb_free);
+    List_free(pReady_norm, pcb_free);
+    List_free(pReady_low, pcb_free);
+    List_free(pBlocked_send, pcb_free);
+    List_free(pBlocked_receive, pcb_free);
+}
+
 static bool comapre_pcb_pointer(void* item0, void* item1){
     return item0 == item1;
 }
 
-static bool print_pcb(void* item0, void* item1){
-    printf("\t");
-    pcb_print_all_info(item0);
-    return 0;
-}
-
 static bool compare_message_pid(void* list_item, void* pid){
     return ((pcb*)list_item)->message_info.pid == *((uint32_t*)pid);
+}
+
+static void print_list(List* pList){
+    if(!List_count(pList)){
+        printf("Empty\n");
+        return;
+    } else {
+        printf("\n");
+    }
+    pcb* item;
+    item = List_last(pList);
+    do {
+        printf("\t\t");
+        pcb_print_all_info(item);
+        item = List_prev(pList);
+
+    } while(item != NULL);
 }

@@ -25,7 +25,7 @@ bool pcb_clone(pcb* pPcb_new, pcb* pPcb_origional, uint32_t new_pid){
     return PCB_PASS;
 }
 
-void pcb_free(pcb* pPcb){
+void pcb_free(void* pPcb){
     memset(pPcb, 0, sizeof(pcb));
 }
 

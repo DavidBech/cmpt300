@@ -10,10 +10,6 @@
 
 static char message_buffer[PCB_ICP_MESSAGE_SIZE];
 
-// Loop until simulation is terminated
-//  Fetch command -> Fetch Args -> Execute command -> Display Status -> repeat
-static void kernel_sim_interpreter_loop(void);
-
 // Get int for arguments
 //  return value 0 to 9
 static int get_input_small_int();
@@ -28,60 +24,10 @@ void kernel_sim_init(void){
     queue_manager_init();
     semaphore_init();
     executioner_init();
-    kernel_sim_interpreter_loop();
 }
 
-static int get_input_small_int(){
-    //TODO -- error handling
-    char character;
-    int value = -1;
-    do {
-        character = fgetc(stdin);
-        if(character >= (int)'0' && character <= (int)'9'){
-            value = character - (int)'0';
-        }
-    } while(value == -1);
-    return value;
-}
-
-static int get_input_int(){
-    int value = -1;
-    // Remove non number chars from stdin
-    char c = '\0';
-    while(!(c >= (int)'0' && c <= (int)'9')){
-        c = fgetc(stdin);
-    } 
-    // put number back on buffer
-    ungetc(c, stdin);
-    // Read number
-    while(value == -1){
-        char in_string[10];
-        char *ptr;
-        fgets(in_string, 10, stdin);
-        value = strtol(in_string, &ptr, 10);
-    }
-    return value;
-}
-
-static void get_input_message(){
-    char c;
-    for(int i=0; i<PCB_ICP_MESSAGE_SIZE; ++i){
-        if(i == PCB_ICP_MESSAGE_SIZE-1){
-            message_buffer[i] = '\0';
-            break;
-        }
-        c = fgetc(stdin);
-        if(c == '\n' || c == '\0'){
-            message_buffer[i] = '\0';
-            break;
-        }
-        message_buffer[i] = c;
-    }
-    return;
-    //TODO -- error handling
-}
-
-static void kernel_sim_interpreter_loop(void){
+void kernel_sim_interpreter_loop(void){
+    int status;
     char command;
     while(1){
         command = fgetc(stdin);
@@ -117,16 +63,22 @@ static void kernel_sim_interpreter_loop(void){
                 printf("===== K: Kill Command =====\n");
                 printf("Enter the process ID to kill: ");
                 int kill_pid = get_input_int();
-                if(executioner_kill(kill_pid)){
+                status = executioner_kill(kill_pid);
+                if(status == KERNEL_SIM_FAILURE){
                     printf("===== Kill Command Completed with error =====\n\n");
+                } else if(status == KERNEL_SIM_TERMINATION){
+                    return;
                 } else {
                     printf("===== Kill Command Completed =====\n\n");
                 }
                 break;
             case('E'):
                 printf("===== E: Exit Command =====\n");
-                if(executioner_exit()){
+                status = executioner_exit();
+                if(status == KERNEL_SIM_FAILURE){
                     printf("===== Exit Command Completed with error\n");
+                } else if(status == KERNEL_SIM_TERMINATION){
+                    return;
                 } else {
                     printf("===== Exit Command Completed =====\n\n");
                 }
@@ -230,4 +182,60 @@ static void kernel_sim_interpreter_loop(void){
                 break;
         }
     }
+}
+
+void kernel_sim_shutdown(void){
+    queue_manager_shutdown();
+    semaphore_shutdown();
+    executioner_module_shutdown();
+}
+
+static int get_input_small_int(){
+    //TODO -- error handling
+    char character;
+    int value = -1;
+    do {
+        character = fgetc(stdin);
+        if(character >= (int)'0' && character <= (int)'9'){
+            value = character - (int)'0';
+        }
+    } while(value == -1);
+    return value;
+}
+
+static int get_input_int(){
+    int value = -1;
+    // Remove non number chars from stdin
+    char c = '\0';
+    while(!(c >= (int)'0' && c <= (int)'9')){
+        c = fgetc(stdin);
+    } 
+    // put number back on buffer
+    ungetc(c, stdin);
+    // Read number
+    while(value == -1){
+        char in_string[10];
+        char *ptr;
+        fgets(in_string, 10, stdin);
+        value = strtol(in_string, &ptr, 10);
+    }
+    return value;
+}
+
+static void get_input_message(){
+    char c;
+    for(int i=0; i<PCB_ICP_MESSAGE_SIZE; ++i){
+        if(i == PCB_ICP_MESSAGE_SIZE-1){
+            message_buffer[i] = '\0';
+            break;
+        }
+        c = fgetc(stdin);
+        if(c == '\n' || c == '\0'){
+            message_buffer[i] = '\0';
+            break;
+        }
+        message_buffer[i] = c;
+    }
+    return;
+    //TODO -- error handling
 }

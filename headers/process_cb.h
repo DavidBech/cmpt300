@@ -10,7 +10,7 @@
 //  -- This file defines an api for creation/deletion/modification to pcb structure
 
 // Max IPC message to fit in PCB, this include \0 terminator
-#define PCB_ICP_MESSAGE_SIZE 40
+#define PCB_ICP_MESSAGE_SIZE 41
 // Minimum PID value
 #define PCB_MIN_PID 0
 // Maximum PID value
@@ -75,7 +75,7 @@ void pcb_init(pcb* pPcb, uint32_t pid, uint32_t prio, uint32_t state);
 bool pcb_clone(pcb* pPcb_new, pcb* pPcb_origional, uint32_t pid_new);
 
 // Frees a pcb struct
-void pcb_free(pcb* pPcb);
+void pcb_free(void* pPcb);
 
 // Returns the pid of the provided pcb
 uint32_t pcb_get_pid(pcb* pPcb);

@@ -19,8 +19,11 @@ static bool invalid_init_id(uint32_t id);
 // Blocks the process on the semaphore
 static void block_process(pcb* p_pcb, semaphore* p_sem);
 
-// prints the pcb used in search list method
-static bool print_pcb(void* item0, void* item1);
+// prints the list
+static void print_list(List* pList);
+
+// find pcb
+static bool find_pcb(void* item0, void* item1);
 
 void semaphore_init(){
     memset(&sem_array, 0, sizeof(sem_array));
@@ -49,6 +52,7 @@ bool semaphore_new(uint32_t id, uint32_t value){
         printf("Failure Out of Queues\n");
         exit(EXIT_FAILURE);
     }
+    printf("Semaphore%d: value:%d Blocked Count:%d", sem->id, sem->value, List_count(sem->blocked));
     return KERNEL_SIM_SUCCESS;
 }
 
@@ -63,6 +67,7 @@ bool semaphore_v(uint32_t id){
         pcb* p_waked = List_trim(p_sem->blocked);
         if(pcb_get_pid(p_waked) == 0){
             // if waked is init process
+            printf("Waked Init Process\n");
 
         } else {
             queue_manager_add_ready(p_waked);
@@ -72,8 +77,8 @@ bool semaphore_v(uint32_t id){
     } else {
         // No blocked process
         ++(p_sem->value);
-        printf("New Semaphore value: %d\n", p_sem->value);
     }
+    printf("Semaphore%d: value:%d Blocked Count:%d", p_sem->id, p_sem->value, List_count(p_sem->blocked));
     return KERNEL_SIM_SUCCESS;
 }
 
@@ -93,42 +98,31 @@ bool semaphore_p(uint32_t id, pcb* pCaller){
     return KERNEL_SIM_SUCCESS;
 }
 
-bool semaphore_block_on_sem(pcb* pPcb){
-    return 0;
-}
-
-bool semaphore_any_blocked(){
-    for(int i=0; i<SEMAPHORE_NUM; ++i){
-        if(invalid_init_id(i)){
-            continue;
-        }
-        if(List_count(sem_array[i].blocked)){
-            return 1; // there is a blocked process
-        }
-    }
-    return 0;
-}
-
 bool semaphore_remove_blocked_pcb(pcb* p_pcb){
-    return 1;
+    List* p_pcb_list = pcb_get_location(p_pcb);
+    if(p_pcb_list == PCB_INIT_LOC){
+        return KERNEL_SIM_FAILURE;
+    }
+    int list_hash = semaphore_list_hash(p_pcb_list);
+    if(list_hash == -1){
+        return KERNEL_SIM_FAILURE;
+    }
+    List_first(p_pcb_list);
+    List_search(p_pcb_list, find_pcb, p_pcb);
+    List_remove(p_pcb_list);
+    return KERNEL_SIM_SUCCESS;
 }
 
 void semaphore_print_all_info(){
     printf("Semaphores:\n");
     for(int i=0; i<SEMAPHORE_NUM; ++i){
         if(invalid_init_id(i)){
-            printf("Semaphore%d: Uninitialized\n", i);
+            printf("\tSemaphore%d: Uninitialized\n", i);
             continue;
         }
         semaphore* p_sem = &sem_array[i];
-        printf("Semaphore%d: value:%d Blocked:", i, p_sem->value);
-        if(List_count(p_sem->blocked)){
-            printf("\n");
-            List_first(p_sem->blocked);
-            List_search(p_sem->blocked, print_pcb, NULL);
-        } else {
-            printf(" None\n");
-        }
+        printf("\tSemaphore%d: value:%d Blocked:", i, p_sem->value);
+        print_list(p_sem->blocked);
     }
 }
 
@@ -144,6 +138,15 @@ int semaphore_list_hash(List* loc){
     return -1;
 }
 
+void semaphore_shutdown(){
+    for(int i=0; i<SEMAPHORE_NUM; ++i){
+        if(invalid_init_id(i)){
+            continue;
+        }
+        List_free(sem_array[i].blocked, pcb_free);
+    }
+}
+
 static bool invalid_init_id(uint32_t id){
     return id < 0 || id >= SEMAPHORE_NUM || !sem_array[id].init;    
 }
@@ -157,8 +160,25 @@ static void block_process(pcb* p_pcb, semaphore* p_sem){
     List_prepend(pBlocked_list, p_pcb);
 }
 
-static bool print_pcb(void* item0, void* item1){
-    printf("\t");
-    pcb_print_all_info(item0);
-    return 0;
+static void print_list(List* pList){
+    if(pList == NULL){
+        return;
+    }
+    if(!List_count(pList)){
+        printf(" None\n");
+        return;
+    } else {
+        printf("\n");
+    }
+    pcb* item;
+    item = List_last(pList);
+    do {
+        printf("\t\t");
+        pcb_print_all_info(item);
+        item = List_prev(pList);
+    } while(item != NULL);
+}
+
+static bool find_pcb(void* item0, void* item1){
+    return item0 == item1;
 }

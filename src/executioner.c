@@ -34,7 +34,7 @@ static void free_pid(int pid_to_free);
 static void print_current_proc_info();
 
 // checks condidtions for termination and does so if they all pass
-static void termination();
+static int termination();
 
 // removes the pcb from its queue to free it
 static bool remove_from_queue(pcb* p_pcb);
@@ -101,14 +101,13 @@ bool executioner_fork(void){
     return KERNEL_SIM_FAILURE;
 }
 
-bool executioner_kill(uint32_t pid){ 
+int executioner_kill(uint32_t pid){ 
     if(pid_in_use(pid)){
         printf("The input pid:%#04x does not map to a current created process\n", pid);
         return KERNEL_SIM_FAILURE;
     }
     if(pid == init_pid){
-        termination();
-        return KERNEL_SIM_FAILURE;
+        return termination();
     }
     pcb* pcb = &pcb_array[pid];
     if(pcb == current_process){
@@ -127,10 +126,9 @@ bool executioner_kill(uint32_t pid){
     return KERNEL_SIM_SUCCESS;
 }
 
-bool executioner_exit(void){ 
+int executioner_exit(void){ 
     if(current_process == init_process){
-        termination();
-        return KERNEL_SIM_FAILURE;
+        return termination();
     }
     // Free current process
     pcb* p_prev = current_process;
@@ -158,11 +156,6 @@ bool executioner_quantum(void){
 bool executioner_send(uint32_t pid, char* msg){ 
     if(pid_in_use(pid)){
         printf("The input pid:%#04x does not map to a current created process\n", pid);
-        return KERNEL_SIM_FAILURE;
-    }
-    if(pcb_get_pid(current_process) == pid){
-        // TODO this should be possible
-        printf("Invalid PID, process cannot send message to self\n");
         return KERNEL_SIM_FAILURE;
     }
     if(current_process == init_process || pid == init_pid){
@@ -287,6 +280,10 @@ bool executioner_totalinfo(void){
     return KERNEL_SIM_SUCCESS;
 }
 
+void executioner_module_shutdown(){
+    // TODO
+}
+
 static int get_next_pid(){
     int next = pid_stack.head_index;
     pid_stack.head_index = pid_stack.next_index[pid_stack.head_index];
@@ -302,12 +299,14 @@ static void print_current_proc_info(){
     pcb_print_all_info(current_process);
 }
 
-static void termination(){
+static int termination(){
     printf("Attempted Termination\n");
     if(process_count == 1){
         printf("Termination Proceding\n");
-        exit(EXIT_SUCCESS);// TODO CLEANUP? // TERMINATION FROM HERE?
+        return KERNEL_SIM_TERMINATION;
     }
+    printf("Init process is not only process, not terminating\n");
+    return KERNEL_SIM_FAILURE;
 }
 
 static bool remove_from_queue(pcb* pPcb){
