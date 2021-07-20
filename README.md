@@ -50,7 +50,9 @@ By: David Bechert
 - Command Case
   - A command can be both upper and lower case
 - Send restrictions
-  - The recipient of the send command must exist (additionally with reply)
+  - The recipient of the send command must exist at the time of the call to send (additionally with reply)
+- Receive
+  - When calling receive the same message will be received until the sending process is replied to
 
 ## How the Init process is handled
 
