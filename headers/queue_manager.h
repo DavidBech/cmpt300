@@ -38,6 +38,11 @@ bool queue_manager_check_block_recieve(pcb* p_pcb);
 // return: NULL if not being sent a message
 pcb* queue_manager_check_block_send(uint32_t pid);
 
+// Returns weather the input pcb is on the blockd_send queue
+// return: 1 if the pcb is on the queue
+// return: 0 otherwise
+bool queue_manager_check_blocked_on_send(pcb* p_pcb);
+
 // Checks if any of the queues are non-empty
 //  return: 1 if a queue is non-empty
 //  return: 0 otherwise

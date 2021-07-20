@@ -109,10 +109,18 @@ void pcb_print_all_info(pcb* pPcb){
             }
         }
     }
-    printf("PID: %#04x, Prio: %s, State: %s, Queue: %s, Message:%s;\n", 
+    printf("PID: %#04x, Prio: %s, State: %s, Queue: %s,", 
         pPcb->field.pid, 
         pPcb->field.prio == PRIO_HIGH ? "high" : pPcb->field.prio == PRIO_NORMAL ? "norm" : pPcb->field.prio == PRIO_LOW ? " low" : "init", 
         pPcb->field.state == STATE_RUNNING ? "running" : pPcb->field.state == STATE_READY ? "ready" : "blocked",
-        list_location,
-        pPcb->message);
+        list_location
+        );
+    
+    char* msg = pcb_get_message(pPcb);
+    if(msg[0] == '\0'){
+        printf(" Message: No Message\n");
+    } else {
+        printf(" Message (%s %#04x): %s\n", pcb_get_reciever(pPcb) ? "From" : "To", pcb_get_message_source(pPcb), msg);
+    }    
+    
 }

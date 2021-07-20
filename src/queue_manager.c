@@ -143,6 +143,10 @@ pcb* queue_manager_check_block_send(uint32_t pid){
     return (pcb*)List_search(pBlocked_send, compare_message_pid, &pid);
 }
 
+bool queue_manager_check_blocked_on_send(pcb* p_pcb){
+    return pcb_get_location(p_pcb) == pBlocked_send;
+}
+
 void queue_manager_print_info(){
     printf("Queues: \n");
     if(List_count(pReady_high)){

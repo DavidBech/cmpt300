@@ -161,7 +161,8 @@ bool executioner_send(uint32_t pid, char* msg){
         return KERNEL_SIM_FAILURE;
     }
     if(pcb_get_pid(current_process) == pid){
-        printf("Invalid PID, Cannot send message to self\n");
+        // TODO this should be possible
+        printf("Invalid PID, process cannot send message to self\n");
         return KERNEL_SIM_FAILURE;
     }
     if(current_process == init_process || pid == init_pid){
@@ -177,17 +178,14 @@ bool executioner_send(uint32_t pid, char* msg){
             pcb_set_message_source(reciever, pcb_get_pid(current_process));
             // Add reciever to ready queue
             queue_manager_add_ready(reciever);
-            // Add current process to blocked on send queue, waiting for reply
-            printf("Added Current Process to blocked send queue waiting for reply\n");
-            queue_manager_add_block_send(current_process);
-            // Get next ready process
-            new_current_running_process(queue_manager_get_next_ready());
-        } else {
-            pcb_set_message(current_process, msg);
-            queue_manager_add_block_send(current_process);
-            pcb_set_message_source(current_process, pid);
-            new_current_running_process(queue_manager_get_next_ready());
         }
+        // Add current process to blocked on send queue, waiting for reply
+        pcb_set_message(current_process, msg);
+        pcb_set_message_source(current_process, pid);
+        printf("Added Current Process to blocked send queue waiting for reply\n");
+        queue_manager_add_block_send(current_process);
+        // Get next ready process
+        new_current_running_process(queue_manager_get_next_ready());
         return KERNEL_SIM_SUCCESS;
     }
 }
@@ -199,10 +197,10 @@ bool executioner_receive(void){
     }
     pcb* sender = queue_manager_check_block_send(pcb_get_pid(current_process));
     if(sender){
-        printf("Received Message From: pid%d, Message:%s\n", pcb_get_pid(sender), pcb_get_message(sender));
+        printf("Received Message From: %#04x, Message:%s\n", pcb_get_pid(sender), pcb_get_message(sender));
 
     } else {
-        printf("Adding process to blocked receive queue");
+        printf("Adding process to blocked receive queue\n");
         queue_manager_add_block_recieve(current_process);
         new_current_running_process(queue_manager_get_next_ready());
     }
@@ -210,8 +208,29 @@ bool executioner_receive(void){
 }
 
 bool executioner_reply(uint32_t pid, char* msg){ 
-    fprintf(stderr, "Not Implemented\n");
-    return KERNEL_SIM_FAILURE;
+    if(pid_in_use(pid)){
+        printf("The input pid:%#04x does not map to a current created process\n", pid);
+        return KERNEL_SIM_FAILURE;
+    }
+    if(pid == 0 || current_process == init_process){
+        printf("Init not supported for IPC\n");
+        return KERNEL_SIM_FAILURE;
+    }
+    pcb* p_sender = &pcb_array[pid];
+    if(queue_manager_check_blocked_on_send(p_sender)){
+        queue_manager_remove(p_sender);
+        pcb_set_message(p_sender, msg);
+        pcb_set_reciever(p_sender);
+        pcb_set_message_source(p_sender, pcb_get_pid(current_process));
+        queue_manager_add_ready(p_sender);
+        printf("Added sender to ready queue\n\t");
+        pcb_print_all_info(p_sender);
+        return KERNEL_SIM_SUCCESS;
+    } else {
+        printf("The pid%#x is not on the blocked send queue\n", pid);
+        return KERNEL_SIM_FAILURE;
+    }
+
 }
 
 bool executioner_semaphore_new(uint32_t sem_id, uint32_t init_value){ 
@@ -334,7 +353,7 @@ static void new_current_running_process(pcb* new_pcb){
     // TODO INIT IPC
     if(current_process != init_process && pcb_get_reciever(current_process)){
         // message recieved
-        printf("Recieved Message From: pid%d, Message:%s\n", pcb_get_message_source(current_process), pcb_get_message(current_process));
+        printf("Recieved Message From: %#04x, Message:%s\n", pcb_get_message_source(current_process), pcb_get_message(current_process));
         pcb_clear_reciever(current_process);
         pcb_clear_message(current_process);
     }

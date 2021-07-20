@@ -164,9 +164,8 @@ static void kernel_sim_interpreter_loop(void){
                 printf("Enter the process ID to reply to: ");
                 int process_reply = get_input_int();
                 printf("Enter the message to send (max 40 chars): ");
-                char msg_reply[PCB_ICP_MESSAGE_SIZE];
-                get_input_message(msg_reply);
-                if(executioner_reply(process_reply, msg_reply)){
+                get_input_message();
+                if(executioner_reply(process_reply, message_buffer)){
                     printf("===== Reply Command Completed with error =====\n\n");
                 } else {
                     printf("===== Reply Command Completed =====\n\n");
