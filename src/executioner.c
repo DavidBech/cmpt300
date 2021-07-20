@@ -34,13 +34,16 @@ static void free_pid(int pid_to_free);
 static void print_current_proc_info();
 
 // checks condidtions for termination and does so if they all pass
-static bool termination();
+static void termination();
 
 // removes the pcb from its queue to free it
 static bool remove_from_queue(pcb* p_pcb);
 
 // checks if the input pid belongs to a running process
 static bool pid_in_use(uint32_t pid);
+
+// switches current process to the new process
+static void new_current_running_process(pcb* new_pcb);
 
 void executioner_init(){
     assert(PCB_MIN_PID == 0);
@@ -77,12 +80,7 @@ bool executioner_create(uint32_t prio){
     printf("Created New Process: \n\t");
     pcb_print_all_info(p_pcb);
     if(current_process == init_process){
-        current_process = queue_manager_get_next_ready();
-        pcb_set_state(init_process, STATE_READY);
-        printf("Previous Process was init process it is now exempted: \n\t");
-        pcb_print_all_info(init_process);
-        printf("Current Process: \n\t");
-        print_current_proc_info();
+        new_current_running_process(queue_manager_get_next_ready());
     }
     ++process_count;
     return KERNEL_SIM_SUCCESS;
@@ -109,10 +107,8 @@ bool executioner_kill(uint32_t pid){
         return KERNEL_SIM_FAILURE;
     }
     if(pid == init_pid){
-        if(termination()){
-            return KERNEL_SIM_FAILURE;
-        }
-        assert(false);
+        termination();
+        return KERNEL_SIM_FAILURE;
     }
     pcb* pcb = &pcb_array[pid];
     if(pcb == current_process){
@@ -133,52 +129,84 @@ bool executioner_kill(uint32_t pid){
 
 bool executioner_exit(void){ 
     if(current_process == init_process){
-       if(termination()){
-           return KERNEL_SIM_FAILURE;
-       }
-       assert(false);
+        termination();
+        return KERNEL_SIM_FAILURE;
     }
     // Free current process
-    free_pid(pcb_get_pid(current_process));
-    pcb_free(current_process);
-    printf("Exited Current Process\n");
-
+    pcb* p_prev = current_process;
     // Get the next process to execute
-    current_process = queue_manager_get_next_ready();
-    if(!current_process){
-        current_process = init_process;
-        pcb_set_state(current_process, STATE_RUNNING);
-    }    
-    printf("New Current Process: \n\t");
-    print_current_proc_info();
+    new_current_running_process(queue_manager_get_next_ready());
+
+    // Free the previous one
+    free_pid(pcb_get_pid(p_prev));
+    pcb_free(p_prev);
+    printf("Exited Previous Process\n");
     --process_count;
     return KERNEL_SIM_SUCCESS;
 }
 
 bool executioner_quantum(void){
-    if(current_process == init_process && queue_manager_any_non_empty()){
+    if(current_process == init_process && queue_manager_any_ready_non_empty()){
         fprintf(stderr, "Invalid State reached init is current process with process in ready queue\n");
-        current_process = queue_manager_get_next_ready();
-        printf("New Current Process: ");
-        print_current_proc_info();    
+        new_current_running_process(queue_manager_get_next_ready());
         return KERNEL_SIM_SUCCESS;
     }
-    printf("Previous Current Process: \n\t");
-    print_current_proc_info();
-    current_process = queue_manager_get_next_ready_exempt(current_process);
-    printf("New Current Process: \n\t");
-    print_current_proc_info();
+    new_current_running_process(queue_manager_get_next_ready_exempt(current_process));
     return KERNEL_SIM_SUCCESS;
 }
 
 bool executioner_send(uint32_t pid, char* msg){ 
-    fprintf(stderr, "Not Implemented\n");
-    return KERNEL_SIM_FAILURE;
+    if(pid_in_use(pid)){
+        printf("The input pid:%#04x does not map to a current created process\n", pid);
+        return KERNEL_SIM_FAILURE;
+    }
+    if(pcb_get_pid(current_process) == pid){
+        printf("Invalid PID, Cannot send message to self\n");
+        return KERNEL_SIM_FAILURE;
+    }
+    if(current_process == init_process || pid == init_pid){
+        printf("Init process sending messages not implemented\n");
+        return KERNEL_SIM_FAILURE;
+    } else {
+        pcb* reciever = &pcb_array[pid];
+        if(queue_manager_check_block_recieve(reciever)){
+            // Fetch reciever and set message fields
+            queue_manager_remove(reciever); 
+            pcb_set_message(reciever, msg);
+            pcb_set_reciever(reciever);
+            pcb_set_message_source(reciever, pcb_get_pid(current_process));
+            // Add reciever to ready queue
+            queue_manager_add_ready(reciever);
+            // Add current process to blocked on send queue, waiting for reply
+            printf("Added Current Process to blocked send queue waiting for reply\n");
+            queue_manager_add_block_send(current_process);
+            // Get next ready process
+            new_current_running_process(queue_manager_get_next_ready());
+        } else {
+            pcb_set_message(current_process, msg);
+            queue_manager_add_block_send(current_process);
+            pcb_set_message_source(current_process, pid);
+            new_current_running_process(queue_manager_get_next_ready());
+        }
+        return KERNEL_SIM_SUCCESS;
+    }
 }
 
 bool executioner_receive(void){ 
-    fprintf(stderr, "Not Implemented\n");
-    return KERNEL_SIM_FAILURE;
+    if(current_process == init_process){
+        printf("init receive not implemented\n");
+        return KERNEL_SIM_FAILURE;
+    }
+    pcb* sender = queue_manager_check_block_send(pcb_get_pid(current_process));
+    if(sender){
+        printf("Received Message From: pid%d, Message:%s\n", pcb_get_pid(sender), pcb_get_message(sender));
+
+    } else {
+        printf("Adding process to blocked receive queue");
+        queue_manager_add_block_recieve(current_process);
+        new_current_running_process(queue_manager_get_next_ready());
+    }
+    return KERNEL_SIM_SUCCESS;
 }
 
 bool executioner_reply(uint32_t pid, char* msg){ 
@@ -201,13 +229,7 @@ bool executioner_semaphore_p(uint32_t sem_id){
             pcb_set_state(init_process, STATE_RUNNING);
         } else {
             // Atempt to get a new process from ready queues
-            current_process = queue_manager_get_next_ready();
-            if(!current_process){
-                current_process = init_process;
-                pcb_set_state(init_process, STATE_RUNNING);
-            }
-            printf("New Current Process: \n\t");
-            print_current_proc_info();
+            new_current_running_process(queue_manager_get_next_ready());
         }
     }
     return KERNEL_SIM_SUCCESS;
@@ -219,13 +241,7 @@ bool executioner_semaphore_v(uint32_t sem_id){
     }
     if(current_process == init_process){
         // Check if a process was readied up
-        pcb* readied = queue_manager_get_next_ready();
-        if(readied){
-            pcb_set_state(init_process, STATE_READY);
-            current_process = readied;
-            printf("Init process readied process switching to readied\nCurrent Process:\n\t");
-            print_current_proc_info();
-        }
+        new_current_running_process(queue_manager_get_next_ready());
     }
     return KERNEL_SIM_SUCCESS;
 }
@@ -267,24 +283,12 @@ static void print_current_proc_info(){
     pcb_print_all_info(current_process);
 }
 
-static bool termination(){
+static void termination(){
     printf("Attempted Termination\n");
-    if(current_process != init_process){
-        printf("Termination Canceled Init is Not Current Process\n");
-        return 1;
+    if(process_count == 1){
+        printf("Termination Proceding\n");
+        exit(EXIT_SUCCESS);// TODO CLEANUP? // TERMINATION FROM HERE?
     }
-    if(semaphore_any_blocked()){
-        printf("Termination Canceled Process Blocked on Semaphore\n");
-        return 1;
-    } 
-    if(queue_manager_any_non_empty()){
-        printf("Termination Canceled Process on Ready or Blocked Queues\n");
-        return 1;
-    }
-    printf("Termination Proceding\n");
-    assert(process_count == 1);
-    exit(EXIT_SUCCESS);// TODO CLEANUP? // TERMINATION FROM HERE?
-    return 0;
 }
 
 static bool remove_from_queue(pcb* pPcb){
@@ -302,4 +306,36 @@ static bool pid_in_use(uint32_t pid){
         return KERNEL_SIM_FAILURE;
     }
     return KERNEL_SIM_SUCCESS;
+}
+
+static void new_current_running_process(pcb* new_pcb){
+    // Info / Actions on previous running process
+    if(current_process == init_process && new_pcb == NULL){
+        return;
+    }
+    if(current_process != NULL){
+        printf("Previous Current Process: \n\t");
+        print_current_proc_info();
+        if(current_process == init_process){
+            pcb_set_state(init_process, STATE_READY);
+        }
+    }
+
+    // Setting the new current running process
+    if(new_pcb == NULL){
+        current_process = init_process;
+        pcb_set_state(current_process, STATE_RUNNING);
+    } else {
+        current_process = new_pcb;
+    }
+    printf("New Current Process: \n\t");
+    print_current_proc_info();
+
+    // TODO INIT IPC
+    if(current_process != init_process && pcb_get_reciever(current_process)){
+        // message recieved
+        printf("Recieved Message From: pid%d, Message:%s\n", pcb_get_message_source(current_process), pcb_get_message(current_process));
+        pcb_clear_reciever(current_process);
+        pcb_clear_message(current_process);
+    }
 }

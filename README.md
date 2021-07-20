@@ -49,6 +49,8 @@ By: David Bechert
   - When a new process is created with a higher priority than current process it **does not** exempt the current process
 - Command Case
   - A command can be both upper and lower case
+- Send restrictions
+  - The recipient of the send command must exist (additionally with reply)
 
 ## How the Init process is handled
 

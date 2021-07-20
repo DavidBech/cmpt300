@@ -28,10 +28,25 @@ void queue_manager_add_block_send(pcb* p_pcb);
 // Adds the provided pcb to the queue for processes blocked on recieve command
 void queue_manager_add_block_recieve(pcb* p_pcb);
 
+// Returns wether the process is currently on the block for recieve queue
+// return: 1 if the the process is blocked on the recieve queue
+// return: 0 otherwise
+bool queue_manager_check_block_recieve(pcb* p_pcb);
+
+// Returns if the pid is currently being sent a message on the send queue
+// return: the pcb sending the message to the pid
+// return: NULL if not being sent a message
+pcb* queue_manager_check_block_send(uint32_t pid);
+
 // Checks if any of the queues are non-empty
 //  return: 1 if a queue is non-empty
 //  return: 0 otherwise
 bool queue_manager_any_non_empty();
+
+// Checks if any of the ready queues are non-empty
+//  return: 1 if a queue is non-empty
+//  return: 0 otherwise
+bool queue_manager_any_ready_non_empty();
 
 // Removes the pcb from the queue its currently in
 //  return: 1 if the pcb is not currently in a queue handled by queue_manager

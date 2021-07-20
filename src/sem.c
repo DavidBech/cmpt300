@@ -63,10 +63,10 @@ bool semaphore_v(uint32_t id){
         pcb* p_waked = List_trim(p_sem->blocked);
         if(pcb_get_pid(p_waked) == 0){
             // if waked is init process
-            --(p_sem->init_count);
+
         } else {
             queue_manager_add_ready(p_waked);
-            printf("Process readied: ");
+            printf("Process readied: \n\t");
             pcb_print_all_info(p_waked);
         }
     } else {
@@ -153,8 +153,6 @@ static void block_process(pcb* p_pcb, semaphore* p_sem){
     pcb_set_state(p_pcb, STATE_BLOCKED);
     if(pcb_get_pid(p_pcb) != 0){
         pcb_set_location(p_pcb, pBlocked_list);
-    } else {
-        ++p_sem->init_count;
     }
     List_prepend(pBlocked_list, p_pcb);
 }

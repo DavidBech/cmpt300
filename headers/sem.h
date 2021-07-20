@@ -15,9 +15,7 @@ struct semaphore_s {
     int value;
     List* blocked;
     uint8_t id;
-    uint8_t init_count;
     bool init;
-    
 };
 
 // Initalize the semaphore module

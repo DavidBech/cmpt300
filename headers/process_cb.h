@@ -10,7 +10,7 @@
 //  -- This file defines an api for creation/deletion/modification to pcb structure
 
 // Max IPC message to fit in PCB, this include \0 terminator
-#define PCB_ICP_MESSAGE_SIZE 41
+#define PCB_ICP_MESSAGE_SIZE 40
 // Minimum PID value
 #define PCB_MIN_PID 0
 // Maximum PID value
@@ -39,6 +39,8 @@ enum PCB_PRIO{
 // Process Control Block
 typedef struct pcb_s pcb;
 struct pcb_s {
+    // Process Location 
+    List* location;
     struct fields_t{
         // Process ID
         uint32_t pid      : 16;
@@ -48,10 +50,13 @@ struct pcb_s {
         uint32_t state    :  2;
         // Reserved
         uint32_t in_use   :  1;
-        uint32_t reserved : 11;
+        uint32_t recieved :  1;
+        uint32_t reserved : 10;
     } field;
-    // Process Location 
-    List* location;
+    struct message_info_t{
+        uint32_t pid      : 16;
+        uint32_t reserved : 16;
+    } message_info;
     // Process IPC Message
     char message[PCB_ICP_MESSAGE_SIZE];
 };
@@ -92,6 +97,21 @@ void pcb_clear_message(pcb* pPcb);
 
 // Sets the current messasge in the pcb provided
 void pcb_set_message(pcb* pPcb, char* msg);
+
+// Sets bit indicating message recieved
+void pcb_set_reciever(pcb* pPcb);
+
+// Clears reciever bit
+void pcb_clear_reciever(pcb* pPcb);
+
+// Gets reciever bit
+uint32_t pcb_get_reciever(pcb* pPcb);
+
+// Gets the pid of the source of the current message
+uint32_t pcb_get_message_source(pcb* pPcb);
+
+// Gets the pid of the source of the current message
+void pcb_set_message_source(pcb* pPcb, uint32_t pid);
 
 // prints all info for the provided pcb
 void pcb_print_all_info(pcb* pPcb);

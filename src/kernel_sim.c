@@ -64,7 +64,20 @@ static int get_input_int(){
 }
 
 static void get_input_message(){
-    fgets(message_buffer, PCB_ICP_MESSAGE_SIZE, stdin);
+    char c;
+    for(int i=0; i<PCB_ICP_MESSAGE_SIZE; ++i){
+        if(i == PCB_ICP_MESSAGE_SIZE-1){
+            message_buffer[i] = '\0';
+            break;
+        }
+        c = fgetc(stdin);
+        if(c == '\n' || c == '\0'){
+            message_buffer[i] = '\0';
+            break;
+        }
+        message_buffer[i] = c;
+    }
+    return;
     //TODO -- error handling
 }
 
@@ -133,37 +146,37 @@ static void kernel_sim_interpreter_loop(void){
                 printf("Enter the message to send (max 40 chars): ");
                 get_input_message();
                 if(executioner_send(process_send, message_buffer)){
-                    // TODO failure
+                    printf("===== Send Command Completed with error =====\n\n");
                 } else {
-                    // TODO success
+                    printf("===== Send Command Completed =====\n\n");
                 }
                 break;
             case('R'):
                 printf("===== R: Receive Command =====\n");
                 if(executioner_receive()){
-                    // TODO failure
+                    printf("===== Receive Command Completed with error =====\n\n");
                 } else {
-                    // TODO success
+                    printf("===== Receive Command Completed =====\n\n");
                 }
                 break;
             case('Y'):
                 printf("===== Y: Reply Command =====\n");
-                printf("===== Enter the process ID to reply to: ");
+                printf("Enter the process ID to reply to: ");
                 int process_reply = get_input_int();
-                printf("===== Enter the message to send (max 40 chars): ");
+                printf("Enter the message to send (max 40 chars): ");
                 char msg_reply[PCB_ICP_MESSAGE_SIZE];
                 get_input_message(msg_reply);
                 if(executioner_reply(process_reply, msg_reply)){
-                    // TODO failure
+                    printf("===== Reply Command Completed with error =====\n\n");
                 } else {
-                    // TODO success
+                    printf("===== Reply Command Completed =====\n\n");
                 }
                 break;
             case('N'):
                 printf("===== N: New Semaphore Command =====\n");
-                printf("===== Enter the semaphore ID to create (0 to 4): ");
+                printf("Enter the semaphore ID to create (0 to 4): ");
                 int semaphore_new_id = get_input_small_int();
-                printf("===== Enter the semaphore's initial input value ( >= 0): ");
+                printf("Enter the semaphore's initial input value ( >= 0): ");
                 unsigned init_value = get_input_int();
                 if(executioner_semaphore_new(semaphore_new_id, init_value)){
                     printf("===== Semaphore New Command Completed with error =====\n\n");
@@ -183,7 +196,7 @@ static void kernel_sim_interpreter_loop(void){
                 break;
             case('V'):
                 printf("===== V: V Semaphore Command =====\n");
-                printf("===== Enter the semaphore ID to v: ");
+                printf("Enter the semaphore ID to v: ");
                 int semaphore_id_v = get_input_small_int();
                 if(executioner_semaphore_v(semaphore_id_v)){
                     printf("===== Semaphore V Command Completed with error =====\n\n");
@@ -193,7 +206,7 @@ static void kernel_sim_interpreter_loop(void){
                 break;
             case('I'):
                 printf("===== I: Procinfo Command\n");
-                printf("===== Enter process ID to display info of: ");
+                printf("Enter process ID to display info of: ");
                 int info_pid = get_input_int();
                 if(executioner_procinfo(info_pid)){
                     printf("===== Procinfo Command Completed with error =====\n\n");

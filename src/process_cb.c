@@ -11,13 +11,17 @@ void pcb_init(pcb* pPcb, uint32_t pid, uint32_t prio, uint32_t state){
     pPcb->field.prio = prio;
     pPcb->field.state = state;
     pPcb->field.in_use = 1;
+    pPcb->field.recieved = 0;
     pPcb->message[0] = '\0';
     pPcb->location = NULL;
 }
 
 bool pcb_clone(pcb* pPcb_new, pcb* pPcb_origional, uint32_t new_pid){
     pPcb_new->field = pPcb_origional->field;
+    pPcb_new->field.recieved = 0;
     pPcb_new->field.pid = new_pid;
+    pPcb_new->message[0] = '\0';
+    pPcb_new->location = NULL;
     return PCB_PASS;
 }
 
@@ -64,8 +68,28 @@ void pcb_set_location(pcb* pPcb, List* location){
     pPcb->location = location;
 }
 
+void pcb_set_reciever(pcb* pPcb){
+    pPcb->field.recieved = 1;
+}
+
+void pcb_clear_reciever(pcb* pPcb){
+    pPcb->field.recieved = 0;
+}
+
+uint32_t pcb_get_reciever(pcb* pPcb){
+    return pPcb->field.recieved;
+}
+
 List* pcb_get_location(pcb* pPcb){
     return pPcb->location;
+}
+
+uint32_t pcb_get_message_source(pcb* pPcb){
+    return pPcb->message_info.pid;
+}
+
+void pcb_set_message_source(pcb* pPcb, uint32_t pid){
+    pPcb->message_info.pid = pid;
 }
 
 void pcb_print_all_info(pcb* pPcb){
