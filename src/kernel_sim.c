@@ -21,6 +21,7 @@ static int get_input_int();
 static void get_input_message();
 
 void kernel_sim_init(void){
+    pcb_module_init();
     queue_manager_init();
     semaphore_init();
     executioner_init();

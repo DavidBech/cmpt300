@@ -52,7 +52,7 @@ bool semaphore_new(uint32_t id, uint32_t value){
         printf("Failure Out of Queues\n");
         exit(EXIT_FAILURE);
     }
-    printf("Semaphore%d: value:%d Blocked Count:%d", sem->id, sem->value, List_count(sem->blocked));
+    printf("Semaphore%d: value:%d Blocked Count:%d\n", sem->id, sem->value, List_count(sem->blocked));
     return KERNEL_SIM_SUCCESS;
 }
 
@@ -78,7 +78,7 @@ bool semaphore_v(uint32_t id){
         // No blocked process
         ++(p_sem->value);
     }
-    printf("Semaphore%d: value:%d Blocked Count:%d", p_sem->id, p_sem->value, List_count(p_sem->blocked));
+    printf("Semaphore%d: value:%d Blocked Count:%d\n", p_sem->id, p_sem->value, List_count(p_sem->blocked));
     return KERNEL_SIM_SUCCESS;
 }
 
