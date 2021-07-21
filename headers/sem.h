@@ -12,10 +12,9 @@ extern const char* semaphore_queue_names[];
 
 typedef struct semaphore_s semaphore;
 struct semaphore_s {
-    int value;
     List* blocked;
+    uint32_t value;
     uint8_t id;
-    bool init;
 };
 
 // Initalize the semaphore module

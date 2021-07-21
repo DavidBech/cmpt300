@@ -11,19 +11,19 @@
 
 const char* semaphore_queue_names[] = {"Sem0","Sem1","Sem2","Sem3","Sem4"};
 
-static semaphore sem_array[SEMAPHORE_NUM];
-
-// returns true on invalid semaphore id for initialized semaphores
-static bool invalid_init_id(uint32_t id);
+static semaphore* sem_array[SEMAPHORE_NUM];
 
 // Blocks the process on the semaphore
 static void block_process(pcb* p_pcb, semaphore* p_sem);
 
 // prints the list
-static void print_list(List* pList);
+static void print_list(int id);
 
 // find pcb
 static bool find_pcb(void* item0, void* item1);
+
+// prints summary of semaphore
+static void print_semaphore_summary(int id);
 
 void semaphore_init(){
     memset(&sem_array, 0, sizeof(sem_array));
@@ -39,29 +39,36 @@ bool semaphore_new(uint32_t id, uint32_t value){
         printf("Invalid inital value: %d\n", value);
         return KERNEL_SIM_FAILURE;
     }
-    semaphore* sem = &sem_array[id];
-    if(sem->init){
+    semaphore* p_sem = sem_array[id];
+    if(p_sem != NULL){
         printf("This semaphore has already been initialized\n");
         return KERNEL_SIM_FAILURE;
     }
-    sem->id = id;
-    sem->value = value;
-    sem->blocked = List_create();
-    sem->init = true;
-    if(sem->blocked == NULL){
+    p_sem = malloc(sizeof(semaphore));
+    p_sem->id = id;
+    p_sem->value = value;
+    p_sem->blocked = List_create();
+    if(p_sem->blocked == NULL){
         printf("Failure Out of Queues\n");
-        exit(EXIT_FAILURE);
+        free(p_sem);
+        return KERNEL_SIM_FAILURE;
     }
-    printf("Semaphore%d: value:%d Blocked Count:%d\n", sem->id, sem->value, List_count(sem->blocked));
+    sem_array[id] = p_sem;
+    print_semaphore_summary(id);
     return KERNEL_SIM_SUCCESS;
 }
 
 bool semaphore_v(uint32_t id){
-    if(invalid_init_id(id)){
+    if(id < 0 || id >= SEMAPHORE_NUM){
         printf("Invalid semaphore id: %d\n", id);
         return KERNEL_SIM_FAILURE;
     }
-    semaphore* p_sem = &sem_array[id];
+    semaphore* p_sem = sem_array[id];
+    if(p_sem == NULL){
+        printf("Semaphore%d is unititialized\n", id);
+        return KERNEL_SIM_FAILURE;
+    }
+
     if(p_sem->value == 0 && List_count(p_sem->blocked)){
         // Wake Blocked process on sem
         pcb* p_waked = List_trim(p_sem->blocked);
@@ -76,24 +83,35 @@ bool semaphore_v(uint32_t id){
         }
     } else {
         // No blocked process
+        if(p_sem->value == 0xffffffff){
+            printf("Semaphore cannot be incremented it is at max value\n");
+            print_semaphore_summary(id);
+            return KERNEL_SIM_FAILURE;
+        }
         ++(p_sem->value);
     }
-    printf("Semaphore%d: value:%d Blocked Count:%d\n", p_sem->id, p_sem->value, List_count(p_sem->blocked));
+    print_semaphore_summary(id);
     return KERNEL_SIM_SUCCESS;
 }
 
 bool semaphore_p(uint32_t id, pcb* pCaller){
-    if(invalid_init_id(id)){
+    if(id < 0 || id >= SEMAPHORE_NUM){
         printf("Invalid semaphore id: %d\n", id);
         return KERNEL_SIM_FAILURE;
     }
-    semaphore* p_sem = &sem_array[id];
+    semaphore* p_sem = sem_array[id];
+    if(p_sem == NULL){
+        printf("Semaphore%d is unititialized\n", id);
+        return KERNEL_SIM_FAILURE;
+    }
     if(p_sem->value == 0){
-        printf("Semaphore is 0, blocking running process\n");
         block_process(pCaller, p_sem);
+        print_semaphore_summary(id);
+        printf("Blocking running process\n");
     } else {
         --p_sem->value;
-        printf("Semaphore is %d, running process still running\n", p_sem->value);
+        print_semaphore_summary(id);
+        printf("Running process still running\n");
     }
     return KERNEL_SIM_SUCCESS;
 }
@@ -116,13 +134,9 @@ bool semaphore_remove_blocked_pcb(pcb* p_pcb){
 void semaphore_print_all_info(){
     printf("Semaphores:\n");
     for(int i=0; i<SEMAPHORE_NUM; ++i){
-        if(invalid_init_id(i)){
-            printf("\tSemaphore%d: Uninitialized\n", i);
-            continue;
-        }
-        semaphore* p_sem = &sem_array[i];
-        printf("\tSemaphore%d: value:%d Blocked:", i, p_sem->value);
-        print_list(p_sem->blocked);
+        printf("\t");
+        print_semaphore_summary(i);
+        print_list(i);
     }
 }
 
@@ -131,7 +145,10 @@ int semaphore_list_hash(List* loc){
         return -1;
     }
     for(int i=0; i<SEMAPHORE_NUM; ++i){
-        if(loc == sem_array[i].blocked){
+        if(sem_array[i] == NULL){
+            continue;
+        }
+        if(loc == sem_array[i]->blocked){
             return i;
         }
     }
@@ -140,35 +157,33 @@ int semaphore_list_hash(List* loc){
 
 void semaphore_shutdown(){
     for(int i=0; i<SEMAPHORE_NUM; ++i){
-        if(invalid_init_id(i)){
+        semaphore* p_sem = sem_array[i];
+        if(p_sem == NULL){
             continue;
         }
-        List_free(sem_array[i].blocked, pcb_free);
+        List_free(sem_array[i]->blocked, pcb_free);
+        free(p_sem);
     }
-}
-
-static bool invalid_init_id(uint32_t id){
-    return id < 0 || id >= SEMAPHORE_NUM || !sem_array[id].init;    
 }
 
 static void block_process(pcb* p_pcb, semaphore* p_sem){
     List* pBlocked_list = p_sem->blocked;
     pcb_set_state(p_pcb, STATE_BLOCKED);
-    if(pcb_get_pid(p_pcb) != 0){
-        pcb_set_location(p_pcb, pBlocked_list);
-    }
+    pcb_set_location(p_pcb, pBlocked_list);
     List_prepend(pBlocked_list, p_pcb);
 }
 
-static void print_list(List* pList){
-    if(pList == NULL){
+static void print_list(int id){
+    if(id < 0 || id >= SEMAPHORE_NUM){
         return;
     }
-    if(!List_count(pList)){
-        printf(" None\n");
+    semaphore * p_sem = sem_array[id];
+    if(p_sem == NULL){
         return;
-    } else {
-        printf("\n");
+    }
+    List* pList = p_sem->blocked;
+    if(!List_count(pList)){
+        return;
     }
     pcb* item;
     item = List_last(pList);
@@ -181,4 +196,16 @@ static void print_list(List* pList){
 
 static bool find_pcb(void* item0, void* item1){
     return item0 == item1;
+}
+
+static void print_semaphore_summary(int id){
+    if(id < 0 || id >= SEMAPHORE_NUM){
+        return;
+    }
+    semaphore* sem = sem_array[id];
+    if(sem == NULL){
+        printf("Seamphore%d: Uninitialized\n", id);
+    } else {
+       printf("Semaphore%d: value:%d Blocked Count:%d\n", sem->id, sem->value, List_count(sem->blocked));
+    }
 }

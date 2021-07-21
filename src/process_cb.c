@@ -86,6 +86,9 @@ uint32_t pcb_get_state(pcb* pPcb){
 }
 
 void pcb_set_state(pcb* pPcb, uint32_t state){
+    if(pPcb->field.prio == PRIO_INIT){
+        return;
+    }
     pPcb->field.state = state;
     if(state == STATE_RUNNING){
         pcb_set_location(pPcb, NULL);
