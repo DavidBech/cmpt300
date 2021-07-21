@@ -38,7 +38,9 @@ By: David Bechert
     - Ready is for processes on one of the 3 ready queues
     - Blocked is for processes blocked on IPC
     - Sem(i) is for processes block on a semaphore
-5. Message:[TODO];
+5. Message:
+    - No Message when message is not being sent or received
+    - Otherwise status of the message in the pcb
 
 ## Assumptions Made
 
@@ -50,9 +52,8 @@ By: David Bechert
 - Command Case
   - A command can be both upper and lower case
 - Send restrictions
-  - The recipient of the send command must exist at the time of the call to send (additionally with reply)
-- Receive
-  - When calling receive the same message will be received until the sending process is replied to
+  - The recipient of the send command must exist at the time of the call to send
+  - A message is only sent once, a second call to receive will block the process
 
 ## How the Init process is handled
 
@@ -67,6 +68,5 @@ By: David Bechert
 
 ## TODO
 
-- messages
 - test code
-- Change order of iteration for print all info on lists
+- init ipc
