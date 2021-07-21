@@ -54,8 +54,8 @@ struct pcb_s {
     struct message_info_t{
         uint32_t pid      : 28;
         uint32_t received :  1;
-        // TODO RECIEVED
-        uint32_t reserved :  3;
+        uint32_t sent     :  1;
+        uint32_t reserved :  2;
     } message_info;
     // Process IPC Message
     char message[PCB_ICP_MESSAGE_SIZE];
@@ -107,6 +107,10 @@ void pcb_clear_received_message(pcb* pPcb);
 
 // Gets received bit
 uint32_t pcb_get_received_message(pcb* pPcb);
+
+void pcb_set_sent_message(pcb* pPcb);
+void pcb_clear_sent_message(pcb* pPcb);
+uint32_t pcb_get_sent_message(pcb* pPcb);
 
 // Gets the pid of the source of the current message
 uint32_t pcb_get_message_pid(pcb* pPcb);

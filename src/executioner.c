@@ -155,10 +155,12 @@ bool executioner_send(uint32_t pid, char* msg){
             pcb_set_message_pid(reciever, pcb_get_pid(current_process));
             // Add reciever to ready queue
             queue_manager_add_ready(reciever);
+            pcb_set_sent_message(current_process);
+        } else {
+            pcb_set_message(current_process, msg);
+            pcb_set_message_pid(current_process, pid);
+            pcb_clear_sent_message(current_process);
         }
-        // Add current process to blocked on send queue, waiting for reply
-        pcb_set_message(current_process, msg);
-        pcb_set_message_pid(current_process, pid);
         printf("Added Current Process to blocked send queue waiting for reply\n");
         queue_manager_add_block_send(current_process);
         // Get next ready process
@@ -177,6 +179,8 @@ bool executioner_receive(void){
     // TODO CANNOT RECEiVE MESSAGES MULTIPLE TIMES
     if(sender){
         printf("Received Message From: %#04x, Message:%s\n", pcb_get_pid(sender), pcb_get_message(sender));
+        pcb_clear_message(sender);
+        pcb_clear_sent_message(sender);
     } else {
         printf("Adding process to blocked receive queue\n");
         queue_manager_add_block_recieve(current_process);
@@ -200,6 +204,7 @@ bool executioner_reply(uint32_t pid, char* msg){
         pcb_set_message(p_sender, msg);
         pcb_set_received_message(p_sender);
         pcb_set_message_pid(p_sender, pcb_get_pid(current_process));
+        pcb_clear_sent_message(p_sender);
         queue_manager_add_ready(p_sender);
         printf("Added sender to ready queue\n\t");
         pcb_print_all_info(p_sender);

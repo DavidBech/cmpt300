@@ -194,7 +194,11 @@ static bool comapre_pcb_pointer(void* item0, void* item1){
 }
 
 static bool compare_message_pid(void* list_item, void* pid){
-    return ((pcb*)list_item)->message_info.pid == *((uint32_t*)pid);
+    pcb* p_pcb = (pcb*)list_item;
+    if(!pcb_get_sent_message(p_pcb)){
+        return p_pcb->message_info.pid == *((uint32_t*)pid);    
+    }
+    return 0;
 }
 
 static void print_list(List* pList){

@@ -152,6 +152,18 @@ uint32_t pcb_get_received_message(pcb* pPcb){
     return pPcb->message_info.received;
 }
 
+void pcb_set_sent_message(pcb* pPcb){
+    pPcb->message_info.sent = 1;
+}
+
+void pcb_clear_sent_message(pcb* pPcb){
+    pPcb->message_info.sent = 0;
+}
+
+uint32_t pcb_get_sent_message(pcb* pPcb){
+    return pPcb->message_info.sent;
+}
+
 void pcb_print_all_info(pcb* pPcb){
     const char* list_location;
     if(pPcb->location == PCB_INIT_LOC){
@@ -177,10 +189,11 @@ void pcb_print_all_info(pcb* pPcb){
         );
     
     char* msg = pcb_get_message(pPcb);
-    if(msg[0] == '\0'){
-        printf(" Message: No Message\n");
+    if(pcb_get_received_message(pPcb)){
+        printf(" Message (From %#04x): %s\n", pcb_get_message_pid(pPcb), msg);
+    } else if (msg[0] != '\0' && !pcb_get_sent_message(pPcb)){
+        printf(" Message (To %#04x): %s\n", pcb_get_message_pid(pPcb), msg);
     } else {
-        printf(" Message (%s %#04x): %s\n", pcb_get_received_message(pPcb) ? "From" : "To", pcb_get_message_pid(pPcb), msg);
-    }    
-    
+        printf(" Message: No Message\n");
+    }
 }
