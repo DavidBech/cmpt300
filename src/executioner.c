@@ -21,7 +21,7 @@ static pcb* init_process;
 // Current running process
 static pcb* current_process;
 // Map of PID to processes
-static pcb* pcb_array[PCB_MAX_PID];
+static pcb* pcb_array[PCB_MAX_PID + 1];
 
 // Static Functions
 
@@ -54,6 +54,9 @@ bool executioner_create(uint32_t prio){
         return KERNEL_SIM_FAILURE;
     }
     pcb *p_pcb = pcb_init(prio, STATE_READY);
+    if(p_pcb == NULL){
+        return KERNEL_SIM_FAILURE;
+    }
     pcb_array[pcb_get_pid(p_pcb)] = p_pcb;
     queue_manager_add_ready(p_pcb);
     printf("Created New Process: \n\t");
@@ -67,10 +70,13 @@ bool executioner_create(uint32_t prio){
 
 bool executioner_fork(void){
     if(current_process == init_process){
-        printf("Failure Cannot fork the init process\n");
+        printf("Cannot fork the init process\n");
         return KERNEL_SIM_FAILURE;
     }
     pcb* p_pcb = pcb_clone(current_process);
+    if(p_pcb == NULL){
+        return KERNEL_SIM_FAILURE;
+    }
     pcb_array[pcb_get_pid(p_pcb)] = p_pcb;
     queue_manager_add_ready(p_pcb);
     printf("Forked New Process: \n\t");
@@ -81,7 +87,6 @@ bool executioner_fork(void){
 
 int executioner_kill(uint32_t pid){ 
     if(pid_not_in_use(pid)){
-        printf("The input pid:%#04x does not map to a current created process\n", pid);
         return KERNEL_SIM_FAILURE;
     }
     if(pid == init_pid){
@@ -134,7 +139,6 @@ bool executioner_quantum(void){
 
 bool executioner_send(uint32_t pid, char* msg){ 
     if(pid_not_in_use(pid)){
-        printf("The input pid:%#04x does not map to a current created process\n", pid);
         return KERNEL_SIM_FAILURE;
     }
     if(current_process == init_process || pid == init_pid){
@@ -183,7 +187,6 @@ bool executioner_receive(void){
 
 bool executioner_reply(uint32_t pid, char* msg){ 
     if(pid_not_in_use(pid)){
-        printf("The input pid:%#04x does not map to a current created process\n", pid);
         return KERNEL_SIM_FAILURE;
     }
     if(pid == 0 || current_process == init_process){
@@ -242,7 +245,6 @@ bool executioner_semaphore_v(uint32_t sem_id){
 
 bool executioner_procinfo(uint32_t pid){ 
     if(pid_not_in_use(pid)){
-        printf("The input pid:%#04x does not map to a current created process\n", pid);
         return KERNEL_SIM_FAILURE;
     }
     pcb_print_all_info(pcb_array[pid]);
@@ -278,7 +280,12 @@ static int termination(){
 }
 
 static bool pid_not_in_use(uint32_t pid){
+    if(pid > PCB_MAX_PID){
+        printf("The Pid:%#x is not currently use\n", pid);
+        return true;
+    }
     if(pcb_array[pid] == NULL){
+        printf("The Pid:%#x is not currently use\n", pid);
         return true;
     }
     return false;

@@ -14,7 +14,9 @@
 // Minimum PID value
 #define PCB_MIN_PID 0
 // Maximum PID value
-#define PCB_MAX_PID 0xFFFF
+#define PCB_MAX_PID 0xFFFFFE
+
+#define PCB_OUT_OF_PID -1
 
 #define PCB_FAIL 1 
 #define PCB_PASS 0

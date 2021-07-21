@@ -11,7 +11,7 @@
 // TODO TEST OUT OF PIDS
 static struct pid_stack_s{
     int head_index;
-    int next_index[PCB_MAX_PID];
+    int next_index[PCB_MAX_PID + 1];
 }pid_stack;
 
 // gets the next valid pid
@@ -36,17 +36,24 @@ void pcb_module_init(){
     for(int i=PCB_MIN_PID; i<=PCB_MAX_PID; ++i){
         pid_stack.next_index[i] = i+1;
     }
-    pid_stack.next_index[PCB_MAX_PID] = -1;
+    pid_stack.next_index[PCB_MAX_PID] = PCB_OUT_OF_PID;
     pid_stack.head_index = 0;
 }
 
 pcb* pcb_init(uint32_t prio, uint32_t state){
+    uint32_t pid = get_next_pid();
+    if(pid == PCB_OUT_OF_PID){
+        printf("Out of PIDs\n");
+        return NULL;
+    }
+
     pcb* p_pcb = malloc(sizeof(pcb));
     if(p_pcb == NULL){
+        printf("Out of Memory\n");
         return NULL;
     }
     p_pcb->location = NULL;
-    p_pcb->field.pid = get_next_pid();
+    p_pcb->field.pid = pid;
     p_pcb->field.prio = prio;
     p_pcb->field.state = state;
     p_pcb->message[0] = '\0';
@@ -55,8 +62,14 @@ pcb* pcb_init(uint32_t prio, uint32_t state){
 }
 
 pcb* pcb_clone(pcb* p_pcb_origional){
+    uint32_t pid = get_next_pid();
+    if(pid == PCB_OUT_OF_PID){
+        printf("Out of PIDs\n");
+        return NULL;
+    }
     pcb* p_pcb = malloc(sizeof(pcb));
     if(p_pcb == NULL){
+        printf("Out of Memory\n");
         return NULL;
     }
     p_pcb->location = NULL;
