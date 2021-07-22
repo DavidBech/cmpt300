@@ -43,11 +43,6 @@ pcb* queue_manager_check_block_send(uint32_t pid);
 // return: 0 otherwise
 bool queue_manager_check_blocked_on_send(pcb* p_pcb);
 
-// Checks if any of the queues are non-empty
-//  return: 1 if a queue is non-empty
-//  return: 0 otherwise
-bool queue_manager_any_non_empty();
-
 // Checks if any of the ready queues are non-empty
 //  return: 1 if a queue is non-empty
 //  return: 0 otherwise

@@ -1,6 +1,7 @@
 # Assignment 3 Branch
 
 Due: 2021 - Jul - 23
+
 By: David Bechert
 
 ## Makefile Targets
@@ -15,6 +16,7 @@ By: David Bechert
 - kernel\_sim
   - Initializes the environment
   - Reads user input for commands thier arguments
+  - calls other modules shutdown methods
 - executioner
   - Implementation of the commands
 - queue\_manager
@@ -40,7 +42,7 @@ By: David Bechert
     - Sem(i) is for processes block on a semaphore
 5. Message:
     - No Message when message is not being sent or received
-    - Otherwise status of the message in the pcb
+    - To/From PID as well sas the message contents
 
 ## Assumptions Made
 
@@ -64,9 +66,9 @@ By: David Bechert
 - killing or exiting will cause termination when it is the only process
 - will only recieve arbitration if every other process is blocked
 - the init process may be "blocked" on multiple semaphores as well as multiple times on the same semaphore
-- TODO OTHER INIT INTERACTIONS
+- the init process may recieve at most once at a time ie. a call to receive will fail if the init process already on the receive queue
+- the init process may send at most one message at a time ie. send calls will fail if the init process is already on the send queue
 
 ## TODO
 
 - test code
-- init ipc

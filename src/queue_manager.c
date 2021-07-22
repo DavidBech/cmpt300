@@ -74,18 +74,6 @@ void queue_manager_add_block_recieve(pcb* p_pcb){
     List_prepend(pBlocked_receive, p_pcb);
 }
 
-bool queue_manager_any_non_empty(){
-    if(List_count(pReady_high) 
-            || List_count(pReady_norm)
-            || List_count(pReady_low)
-            || List_count(pBlocked_send)
-            || List_count(pBlocked_receive) 
-        ){
-        return 1;
-    }
-    return 0;
-}
-
 bool queue_manager_any_ready_non_empty(){
     if(List_count(pReady_high) 
             || List_count(pReady_norm)
@@ -97,6 +85,27 @@ bool queue_manager_any_ready_non_empty(){
 }
 
 bool queue_manager_remove(pcb* p_pcb){
+    if(pcb_get_priority(p_pcb) == PRIO_INIT){
+        if(List_curr(pBlocked_send) == p_pcb){
+            List_remove(pBlocked_send);
+            return KERNEL_SIM_SUCCESS;
+        }
+        if(List_curr(pBlocked_receive) == p_pcb){
+            List_remove(pBlocked_receive);
+            return KERNEL_SIM_SUCCESS;
+        }
+        List_first(pBlocked_send);
+        if(List_search(pBlocked_send, comapre_pcb_pointer, p_pcb)){
+            List_remove(pBlocked_send);
+            return KERNEL_SIM_SUCCESS;
+        }
+        List_first(pBlocked_receive);
+        if(List_search(pBlocked_receive, comapre_pcb_pointer, p_pcb)){
+            List_remove(pBlocked_receive);
+            return KERNEL_SIM_SUCCESS;
+        }
+        return KERNEL_SIM_FAILURE;
+    }
     List* pLoc_pcb = pcb_get_location(p_pcb);
     if(queue_manager_list_hash(pLoc_pcb) == INVALID_HASH){
         return KERNEL_SIM_FAILURE;
@@ -135,6 +144,10 @@ pcb* queue_manager_get_next_ready(void){
 }
 
 bool queue_manager_check_block_recieve(pcb* p_pcb){
+    if(pcb_get_location(p_pcb) == PCB_INIT_LOC){
+        List_first(pBlocked_receive);
+        return List_search(pBlocked_receive, comapre_pcb_pointer, p_pcb) != NULL;
+    }
     return p_pcb->location == pBlocked_receive;
 }
 
@@ -144,6 +157,10 @@ pcb* queue_manager_check_block_send(uint32_t pid){
 }
 
 bool queue_manager_check_blocked_on_send(pcb* p_pcb){
+    if(pcb_get_priority(p_pcb) == PRIO_INIT){
+        List_first(pBlocked_send);
+        return List_search(pBlocked_send, comapre_pcb_pointer, p_pcb) != NULL;   
+    }
     return pcb_get_location(p_pcb) == pBlocked_send;
 }
 
@@ -182,11 +199,7 @@ int queue_manager_list_hash(List* pList){
 }
 
 void queue_manager_shutdown(){
-    List_free(pReady_high, pcb_free);
-    List_free(pReady_norm, pcb_free);
-    List_free(pReady_low, pcb_free);
-    List_free(pBlocked_send, pcb_free);
-    List_free(pBlocked_receive, pcb_free);
+    return;
 }
 
 static bool comapre_pcb_pointer(void* item0, void* item1){

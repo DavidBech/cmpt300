@@ -81,6 +81,9 @@ pcb* pcb_clone(pcb* p_pcb_origional){
 }
 
 void pcb_free(void* p_pcb){
+    if(p_pcb == NULL){
+        return;
+    }
     free_pid(((pcb*)p_pcb)->field.pid);
     free(p_pcb);
     p_pcb = NULL;
@@ -117,6 +120,9 @@ void pcb_clear_message(pcb* pPcb){
 }
 
 void pcb_set_message(pcb* pPcb, char* msg){
+    if(pPcb->message == msg){
+        return;
+    }
     strcpy(pPcb->message, msg);
     //TODO ERROR HANDLING
 }
@@ -181,7 +187,7 @@ void pcb_print_all_info(pcb* pPcb){
             }
         }
     }
-    printf("PID: %#04x, Prio: %s, State: %s, Queue: %s,", 
+    printf("PID: %u, Prio: %s, State: %s, Queue: %s,", 
         pPcb->field.pid, 
         pPcb->field.prio == PRIO_HIGH ? "high" : pPcb->field.prio == PRIO_NORMAL ? "norm" : pPcb->field.prio == PRIO_LOW ? "low" : "init", 
         pPcb->field.state == STATE_RUNNING ? "running" : pPcb->field.state == STATE_READY ? "ready" : "blocked",

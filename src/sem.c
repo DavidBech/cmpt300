@@ -161,7 +161,6 @@ void semaphore_shutdown(){
         if(p_sem == NULL){
             continue;
         }
-        List_free(sem_array[i]->blocked, pcb_free);
         free(p_sem);
     }
 }

@@ -36,6 +36,9 @@ static bool pid_not_in_use(uint32_t pid);
 // switches current process to the new process
 static void new_current_running_process(pcb* new_pcb);
 
+// Receives message for the current process
+static void receive_message();
+
 void executioner_init(){
     assert(PCB_MIN_PID == 0);
     memset(pcb_array, '\0', sizeof(pcb_array));
@@ -50,7 +53,7 @@ void executioner_init(){
 
 bool executioner_create(uint32_t prio){
     if(prio > 2 || prio < 0){
-        printf("Invalid priority (%d) aborting create command\n", prio);
+        printf("Invalid priority (%u) aborting create command\n", prio);
         return KERNEL_SIM_FAILURE;
     }
     pcb *p_pcb = pcb_init(prio, STATE_READY);
@@ -141,48 +144,52 @@ bool executioner_send(uint32_t pid, char* msg){
     if(pid_not_in_use(pid)){
         return KERNEL_SIM_FAILURE;
     }
-    if(current_process == init_process || pid == init_pid){
-        // TODO
-        printf("Init process sending messages not implemented\n");
+    if(current_process == init_process && queue_manager_check_blocked_on_send(current_process)){
+        printf("Cannot add the init process to send queue it is already there\n");
         return KERNEL_SIM_FAILURE;
-    } else {
-        pcb* reciever = pcb_array[pid];
-        if(queue_manager_check_block_recieve(reciever)){
-            // Fetch reciever and set message fields
-            queue_manager_remove(reciever); 
-            pcb_set_message(reciever, msg);
-            pcb_set_received_message(reciever);
-            pcb_set_message_pid(reciever, pcb_get_pid(current_process));
+    }
+    pcb* reciever = pcb_array[pid];
+    if(queue_manager_check_block_recieve(reciever)){
+        // Fetch reciever and set message fields
+        queue_manager_remove(reciever); 
+        pcb_set_message(reciever, msg);
+        pcb_set_received_message(reciever);
+        pcb_set_message_pid(reciever, pcb_get_pid(current_process));
+        if(current_process == init_process){
+            // message recieved
+            receive_message();
+        } else {
             // Add reciever to ready queue
             queue_manager_add_ready(reciever);
             pcb_set_sent_message(current_process);
-        } else {
-            pcb_set_message(current_process, msg);
-            pcb_set_message_pid(current_process, pid);
-            pcb_clear_sent_message(current_process);
         }
-        printf("Added Current Process to blocked send queue waiting for reply\n");
-        queue_manager_add_block_send(current_process);
-        // Get next ready process
-        new_current_running_process(queue_manager_get_next_ready());
-        return KERNEL_SIM_SUCCESS;
+    } else {
+        pcb_set_message(current_process, msg);
+        pcb_set_message_pid(current_process, pid);
+        pcb_clear_sent_message(current_process);
     }
+    printf("Added Current Process to blocked send queue waiting for reply\n");
+    queue_manager_add_block_send(current_process);
+    // Get next ready process
+    new_current_running_process(queue_manager_get_next_ready());
+    return KERNEL_SIM_SUCCESS;
 }
 
-bool executioner_receive(void){ 
-    if(current_process == init_process){
-        // TODO
-        printf("init receive not implemented\n");
-        return KERNEL_SIM_FAILURE;
-    }
+bool executioner_recieve(void){ 
     pcb* sender = queue_manager_check_block_send(pcb_get_pid(current_process));
-    // TODO CANNOT RECEiVE MESSAGES MULTIPLE TIMES
     if(sender){
-        printf("Received Message From: %#04x, Message:%s\n", pcb_get_pid(sender), pcb_get_message(sender));
+        pcb_set_message(current_process, pcb_get_message(sender));
+        pcb_set_message_pid(current_process, pcb_get_pid(sender));
+        pcb_set_received_message(current_process);
+        pcb_set_sent_message(sender);
+        receive_message();
         pcb_clear_message(sender);
-        pcb_clear_sent_message(sender);
     } else {
-        printf("Adding process to blocked receive queue\n");
+        if(current_process == init_process && queue_manager_check_block_recieve(current_process)){
+            printf("Cannot add init process to recieve queue it already present there\n");
+            return KERNEL_SIM_FAILURE;
+        }
+        printf("Adding process to blocked recieve queue\n");
         queue_manager_add_block_recieve(current_process);
         new_current_running_process(queue_manager_get_next_ready());
     }
@@ -193,24 +200,26 @@ bool executioner_reply(uint32_t pid, char* msg){
     if(pid_not_in_use(pid)){
         return KERNEL_SIM_FAILURE;
     }
-    if(pid == 0 || current_process == init_process){
-        // TODO
-        printf("Init not supported for IPC\n");
-        return KERNEL_SIM_FAILURE;
-    }
     pcb* p_sender = pcb_array[pid];
     if(queue_manager_check_blocked_on_send(p_sender)){
         queue_manager_remove(p_sender);
         pcb_set_message(p_sender, msg);
         pcb_set_received_message(p_sender);
         pcb_set_message_pid(p_sender, pcb_get_pid(current_process));
-        pcb_clear_sent_message(p_sender);
-        queue_manager_add_ready(p_sender);
-        printf("Added sender to ready queue\n\t");
-        pcb_print_all_info(p_sender);
+        if(current_process == init_process){
+            if(p_sender == init_process){
+                receive_message();
+            } else {
+                new_current_running_process(queue_manager_get_next_ready());
+            }
+        } else {
+            queue_manager_add_ready(p_sender);
+            printf("Added sender to ready queue\n\t");
+            pcb_print_all_info(p_sender);
+        }
         return KERNEL_SIM_SUCCESS;
     } else {
-        printf("The pid%#x is not on the blocked send queue\n", pid);
+        printf("The pid%u is not on the blocked send queue\n", pid);
         return KERNEL_SIM_FAILURE;
     }
 
@@ -285,12 +294,8 @@ static int termination(){
 }
 
 static bool pid_not_in_use(uint32_t pid){
-    if(pid > PCB_MAX_PID){
-        printf("The Pid:%#x is not currently use\n", pid);
-        return true;
-    }
-    if(pcb_array[pid] == NULL){
-        printf("The Pid:%#x is not currently use\n", pid);
+    if(pid > PCB_MAX_PID || pcb_array[pid] == NULL){
+        printf("The Pid:%u is not currently use\n", pid);
         return true;
     }
     return false;
@@ -315,14 +320,17 @@ static void new_current_running_process(pcb* new_pcb){
         pcb_set_state(current_process, STATE_RUNNING);
     } else {
         current_process = new_pcb;
+        pcb_set_location(current_process, NULL);
     }
     printf("New Current Process: \n\t");
     pcb_print_all_info(current_process);
+    receive_message();
+}
 
-    // TODO INIT IPC
-    if(current_process != init_process && pcb_get_received_message(current_process)){
+static void receive_message(){
+    if(pcb_get_received_message(current_process)){
         // message recieved
-        printf("Recieved Message From: %#04x, Message:%s\n", pcb_get_message_pid(current_process), pcb_get_message(current_process));
+        printf("Recieved Message From: %u, Message:%s\n", pcb_get_message_pid(current_process), pcb_get_message(current_process));
         pcb_clear_received_message(current_process);
         pcb_clear_message(current_process);
     }
