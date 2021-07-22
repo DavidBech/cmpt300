@@ -74,7 +74,7 @@ pcb* pcb_clone(pcb* p_pcb_origional){
     }
     p_pcb->location = NULL;
     p_pcb->field = p_pcb_origional->field;
-    p_pcb->field.pid = get_next_pid();
+    p_pcb->field.pid = pid;
     p_pcb->message[0] = '\0';
     memset(&p_pcb->message_info, '\0', sizeof(p_pcb->message_info));
     return p_pcb;
