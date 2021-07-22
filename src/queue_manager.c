@@ -71,7 +71,7 @@ void queue_manager_add_block_send(pcb* p_pcb){
 void queue_manager_add_block_recieve(pcb* p_pcb){
     pcb_set_state(p_pcb, STATE_BLOCKED);
     pcb_set_location(p_pcb, pBlocked_receive);
-    List_prepend(pBlocked_receive, p_pcb);
+    List_append(pBlocked_receive, p_pcb);
 }
 
 bool queue_manager_any_ready_non_empty(){
@@ -116,7 +116,6 @@ bool queue_manager_remove(pcb* p_pcb){
         List_remove(pLoc_pcb);
         return  KERNEL_SIM_SUCCESS;
     } else {
-        // not found TODO should never get here
         return KERNEL_SIM_FAILURE;
     }
 }

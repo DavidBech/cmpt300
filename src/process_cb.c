@@ -8,7 +8,6 @@
 #include "sem.h"
 
 // Stack for keeping track of available pids 
-// TODO TEST OUT OF PIDS
 static struct pid_stack_s{
     int head_index;
     int next_index[PCB_MAX_PID + 1];
@@ -124,7 +123,6 @@ void pcb_set_message(pcb* pPcb, char* msg){
         return;
     }
     strcpy(pPcb->message, msg);
-    //TODO ERROR HANDLING
 }
 
 List* pcb_get_location(pcb* pPcb){
@@ -196,9 +194,9 @@ void pcb_print_all_info(pcb* pPcb){
     
     char* msg = pcb_get_message(pPcb);
     if(pcb_get_received_message(pPcb)){
-        printf(" Message (From %#04x): %s\n", pcb_get_message_pid(pPcb), msg);
+        printf(" Message (From %u): %s\n", pcb_get_message_pid(pPcb), msg);
     } else if (msg[0] != '\0' && !pcb_get_sent_message(pPcb)){
-        printf(" Message (To %#04x): %s\n", pcb_get_message_pid(pPcb), msg);
+        printf(" Message (To %u): %s\n", pcb_get_message_pid(pPcb), msg);
     } else {
         printf(" Message: No Message\n");
     }

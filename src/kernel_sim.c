@@ -32,8 +32,8 @@ void kernel_sim_interpreter_loop(void){
     char command;
     while(1){
         command = fgetc(stdin);
-        if(command == ' ' || command == '\n' || command == '\0' || command == '\t'){
-            // TODO is there other blank space?
+        // Ignore blank spaces
+        if(command == ' ' || command == '\n' || command == '\0' || command == '\t' || command == EOF){
             continue;
         }
         // Convert lower case to upper case
@@ -41,10 +41,11 @@ void kernel_sim_interpreter_loop(void){
             command -= 'a';
             command += 'A';
         }
+        // Switch statement calling executioner module implementations of commands
         switch(command){
             case('C'):
                 printf("===== C: Create Command =====\n");
-                printf("Enter Priority (0=high, 1=norm, 2=low): ");
+                printf("Enter Priority (0=high, 1=norm, 2=low):\n");
                 int prio = get_input_small_int();
                 if(executioner_create(prio)){
                     printf("===== Create Command Completed with error =====\n\n");
@@ -62,7 +63,7 @@ void kernel_sim_interpreter_loop(void){
                 break;
             case('K'):
                 printf("===== K: Kill Command =====\n");
-                printf("Enter the process ID to kill: ");
+                printf("Enter the process ID to kill:\n");
                 int kill_pid = get_input_int();
                 status = executioner_kill(kill_pid);
                 if(status == KERNEL_SIM_FAILURE){
@@ -94,9 +95,9 @@ void kernel_sim_interpreter_loop(void){
                 break;
             case('S'):
                 printf("===== S: Send Command =====\n");
-                printf("Enter the process ID to send message to: ");
+                printf("Enter the process ID to send message to:\n");
                 int process_send = get_input_int();
-                printf("Enter the message to send (max 40 chars): ");
+                printf("Enter the message to send (max 40 chars):\n");
                 get_input_message();
                 if(executioner_send(process_send, message_buffer)){
                     printf("===== Send Command Completed with error =====\n\n");
@@ -114,9 +115,9 @@ void kernel_sim_interpreter_loop(void){
                 break;
             case('Y'):
                 printf("===== Y: Reply Command =====\n");
-                printf("Enter the process ID to reply to: ");
+                printf("Enter the process ID to reply to:\n");
                 int process_reply = get_input_int();
-                printf("Enter the message to send (max 40 chars): ");
+                printf("Enter the message to send (max 40 chars):\n");
                 get_input_message();
                 if(executioner_reply(process_reply, message_buffer)){
                     printf("===== Reply Command Completed with error =====\n\n");
@@ -126,9 +127,9 @@ void kernel_sim_interpreter_loop(void){
                 break;
             case('N'):
                 printf("===== N: New Semaphore Command =====\n");
-                printf("Enter the semaphore ID to create (0 to 4): ");
+                printf("Enter the semaphore ID to create (0 to 4):\n");
                 int semaphore_new_id = get_input_small_int();
-                printf("Enter the semaphore's initial input value ( >= 0): ");
+                printf("Enter the semaphore's initial input value ( >= 0):\n");
                 unsigned init_value = get_input_int();
                 if(executioner_semaphore_new(semaphore_new_id, init_value)){
                     printf("===== Semaphore New Command Completed with error =====\n\n");
@@ -138,7 +139,7 @@ void kernel_sim_interpreter_loop(void){
                 break;
             case('P'):
                 printf("===== P: P Semaphore Command =====\n");
-                printf("Enter the semaphore ID to p: ");
+                printf("Enter the semaphore ID to p:\n");
                 int semaphore_id_p = get_input_small_int();
                 if(executioner_semaphore_p(semaphore_id_p)){
                     printf("===== Semaphore P Command Completed with error =====\n\n");
@@ -148,7 +149,7 @@ void kernel_sim_interpreter_loop(void){
                 break;
             case('V'):
                 printf("===== V: V Semaphore Command =====\n");
-                printf("Enter the semaphore ID to v: ");
+                printf("Enter the semaphore ID to v:\n");
                 int semaphore_id_v = get_input_small_int();
                 if(executioner_semaphore_v(semaphore_id_v)){
                     printf("===== Semaphore V Command Completed with error =====\n\n");
@@ -158,7 +159,7 @@ void kernel_sim_interpreter_loop(void){
                 break;
             case('I'):
                 printf("===== I: Procinfo Command\n");
-                printf("Enter process ID to display info of: ");
+                printf("Enter process ID to display info of:\n");
                 int info_pid = get_input_int();
                 if(executioner_procinfo(info_pid)){
                     printf("===== Procinfo Command Completed with error =====\n\n");
@@ -174,10 +175,6 @@ void kernel_sim_interpreter_loop(void){
                     printf("===== Totalinfo Command Completed =====\n\n");
                 }
                 break;
-            case('!'):
-                // TODO -- remove
-                printf("!: Temparary Termination\n");
-                exit(0);
             default:
                 printf("===== %c: Inavlid Command =====\n\n", command);
                 break;
@@ -192,7 +189,6 @@ void kernel_sim_shutdown(void){
 }
 
 static int get_input_small_int(){
-    //TODO -- error handling
     char character;
     int value = -1;
     do {
@@ -227,16 +223,17 @@ static void get_input_message(){
     char c;
     for(int i=0; i<PCB_ICP_MESSAGE_SIZE; ++i){
         if(i == PCB_ICP_MESSAGE_SIZE-1){
+            // Buffer full set null and return
             message_buffer[i] = '\0';
             break;
         }
         c = fgetc(stdin);
         if(c == '\n' || c == '\0'){
+            // Do not sote line feeds in message
             message_buffer[i] = '\0';
             break;
         }
         message_buffer[i] = c;
     }
     return;
-    //TODO -- error handling
 }

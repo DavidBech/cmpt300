@@ -65,10 +65,9 @@ By: David Bechert
 - attempting to fork will result in error
 - killing or exiting will cause termination when it is the only process
 - will only recieve arbitration if every other process is blocked
-- the init process may be "blocked" on multiple semaphores as well as multiple times on the same semaphore
-- the init process may recieve at most once at a time ie. a call to receive will fail if the init process already on the receive queue
-- the init process may send at most one message at a time ie. send calls will fail if the init process is already on the send queue
-
-## TODO
-
-- test code
+- may be "blocked" on multiple semaphores
+- may be "blocked" multiple times on the same semaphore
+- the init process may recieve at most once at a time
+  - ie. a call to receive will fail if the init process already on the receive queue
+- the init process may send at most one message at a time
+  - ie. send calls will fail if the init process is already on the send queue

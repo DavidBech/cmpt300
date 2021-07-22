@@ -100,9 +100,8 @@ int executioner_kill(uint32_t pid){
         return executioner_exit();
     }
     if(queue_manager_remove(p_pcb) && semaphore_remove_blocked_pcb(p_pcb)){
-        // TODO
         printf("Could not kill the process\n");
-        return KERNEL_SIM_FAILURE;    
+        return KERNEL_SIM_FAILURE;
     }
     printf("Killing Process: \n\t");
     pcb_array[pcb_get_pid(p_pcb)] = NULL;
@@ -280,7 +279,6 @@ bool executioner_totalinfo(void){
 
 void executioner_module_shutdown(){
     pcb_free(init_process);
-    // TODO
 }
 
 static int termination(){
