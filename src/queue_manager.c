@@ -38,7 +38,7 @@ void queue_manager_init(void){
     printf("Created Queues\n");
 }
 
-bool queue_manager_add_ready(pcb* p_pcb){
+void queue_manager_add_ready(pcb* p_pcb){
     int prio = pcb_get_priority(p_pcb);
     switch(prio){
         case(PRIO_HIGH): 
@@ -57,9 +57,9 @@ bool queue_manager_add_ready(pcb* p_pcb){
             pcb_set_location(p_pcb, pReady_low);
             break;
         default:
-            return KERNEL_SIM_FAILURE;
+            return;
     }
-    return KERNEL_SIM_SUCCESS;
+    return;
 }
 
 void queue_manager_add_block_send(pcb* p_pcb){

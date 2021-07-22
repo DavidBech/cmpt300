@@ -43,8 +43,10 @@ bool semaphore_remove_blocked_pcb(pcb* pPcb);
 // Prints all semaphore info
 void semaphore_print_all_info(void);
 
+// Returns index of semaphore queue names or -1 if input list is not a semaphore queue
 int semaphore_list_hash(List* loc);
 
+// Frees any memory allocated by this module
 void semaphore_shutdown();
 
 #endif

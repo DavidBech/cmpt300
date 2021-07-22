@@ -175,7 +175,7 @@ bool executioner_send(uint32_t pid, char* msg){
     return KERNEL_SIM_SUCCESS;
 }
 
-bool executioner_recieve(void){ 
+bool executioner_receive(void){ 
     pcb* sender = queue_manager_check_block_send(pcb_get_pid(current_process));
     if(sender){
         pcb_set_message(current_process, pcb_get_message(sender));

@@ -17,10 +17,9 @@ extern const char* queue_manager_list_names[];
 // Creates manditory queues
 void queue_manager_init(void);
 
-// Adds the provided pcb to its appropriate ready queue
-//  return: 1 if the provided pcb has an invalid priority
-//  return: 0 otherwise
-bool queue_manager_add_ready(pcb* p_pcb);
+// Adds the provided pcb to its appropriate ready queue 
+// or does nothing if the init process is input
+void queue_manager_add_ready(pcb* p_pcb);
 
 // Adds the provided pcb to the queue for processes blocked on send command
 void queue_manager_add_block_send(pcb* p_pcb);

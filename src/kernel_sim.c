@@ -106,7 +106,7 @@ void kernel_sim_interpreter_loop(void){
                 break;
             case('R'):
                 printf("===== R: Recieve Command =====\n");
-                if(executioner_recieve()){
+                if(executioner_receive()){
                     printf("===== Recieve Command Completed with error =====\n\n");
                 } else {
                     printf("===== Recieve Command Completed =====\n\n");
