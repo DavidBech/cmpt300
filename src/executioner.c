@@ -100,8 +100,12 @@ int executioner_kill(uint32_t pid){
         return executioner_exit();
     }
     if(queue_manager_remove(p_pcb) && semaphore_remove_blocked_pcb(p_pcb)){
-        printf("Could not kill the process\n");
-        return KERNEL_SIM_FAILURE;
+        printf("Killing Process: \n\t");
+        pcb_array[pcb_get_pid(p_pcb)] = NULL;    
+        pcb_print_all_info(p_pcb);
+        free(p_pcb);
+        --process_count;
+        return KERNEL_SIM_SUCCESS;
     }
     printf("Killing Process: \n\t");
     pcb_array[pcb_get_pid(p_pcb)] = NULL;
@@ -154,7 +158,7 @@ bool executioner_send(uint32_t pid, char* msg){
         pcb_set_message(reciever, msg);
         pcb_set_received_message(reciever);
         pcb_set_message_pid(reciever, pcb_get_pid(current_process));
-        if(current_process == init_process){
+        if(current_process == init_process && reciever == init_process){
             // message recieved
             receive_message();
         } else {
@@ -205,16 +209,16 @@ bool executioner_reply(uint32_t pid, char* msg){
         pcb_set_message(p_sender, msg);
         pcb_set_received_message(p_sender);
         pcb_set_message_pid(p_sender, pcb_get_pid(current_process));
-        if(current_process == init_process){
-            if(p_sender == init_process){
-                receive_message();
-            } else {
-                new_current_running_process(queue_manager_get_next_ready());
-            }
+        if(current_process == init_process && init_process == p_sender){
+            receive_message();
         } else {
             queue_manager_add_ready(p_sender);
-            printf("Added sender to ready queue\n\t");
-            pcb_print_all_info(p_sender);
+            if(current_process == init_process){
+                new_current_running_process(queue_manager_get_next_ready());
+            } else {
+                printf("Added sender to ready queue\n\t");
+                pcb_print_all_info(p_sender);
+            }
         }
         return KERNEL_SIM_SUCCESS;
     } else {
