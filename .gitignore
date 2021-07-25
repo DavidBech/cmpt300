@@ -1,10 +1,4 @@
-assignment1/*.o
-assignment1/a.out
-assignment1/.vscode
-assignment1/testDriver
-
-assignment2/obj/*
-assignment2/s-talk
-assignment2/.vscode
-assignment2/log/*
+.vscode
+UnixLs
+obj
 
