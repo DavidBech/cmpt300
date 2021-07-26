@@ -2,7 +2,7 @@
 
 All Code Written By David Bechert
 
-## Usage 
+## Usage
 
 `./UnixLs [OPTION] ... [FILES] ...`
 
