@@ -1,5 +1,9 @@
 # Assignment 4 branch
 
+All Code Written By David Bechert
+
+## Usage 
+
 `./UnixLs [OPTION] ... [FILES] ...`
 
 ## Assignment Details
