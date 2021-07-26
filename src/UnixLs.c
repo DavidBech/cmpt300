@@ -13,11 +13,17 @@ struct unix_ls_arg_s{
     bool recursive;
 };
 
+// Returns hash of string
+unsigned long string_hash(char* str);
+
+// Compares stirng
+bool compare_string(char* str0, char* str1);
+
 // Called with a given file/directory to print as well as additional info about what print paramaters
 void print_file(struct dirent* file_to_print, unix_ls_arg* paramaters);
 
 // Call print_file on each file in the given dir name
-void print_dir(char* path_to_dir, unix_ls_arg* paramaters);
+void print_dir(char* name, unix_ls_arg* paramaters, bool header);
 
 int main(int argc, char** argv){
     unix_ls_arg ls_args;
@@ -50,37 +56,46 @@ int main(int argc, char** argv){
         }
     }
 
-    // TODO remove temparary info
-    printf("Inode: %s\n", ls_args.inode ? "True":"False");
-    printf("Long Output: %s\n", ls_args.long_list ? "True":"False");
-    printf("Recursive %s\n", ls_args.recursive ? "True":"False");
-    printf("Index: %u\n", dir_index);
-    printf("\n");
-
+    bool header = dir_index != 0 && argc - dir_index > 1;
+    // TODO Current implementation will fail if input is file not directory
     // TODO Recursion
     if(dir_index == 0){
-        print_dir(".", &ls_args);
-    } else {
-        // TODO
+        print_dir(".", &ls_args, header);
+    } else { 
+        for(int i=dir_index; i<argc; ++i){
+            print_dir(argv[i], &ls_args, header);
+            if(i != argc -1){
+                printf("\n");
+            }
+        }
     }
 
     return EXIT_SUCCESS;
 }
 
-void print_dir(char* path_to_dir, unix_ls_arg* params){
-    assert(path_to_dir != NULL);
-    DIR* directory = opendir(path_to_dir);
+void print_dir(char* name, unix_ls_arg* params, bool header){
+    assert(name != NULL);
+    DIR* directory = opendir(name);
     if(!directory){
-        fprintf(stderr, "UnixLs: cannot access '%s': No such file or directory\n", path_to_dir);
+        // TODO handle name is file name not directory name
+        errno = 0;
+        fprintf(stderr, "UnixLs: cannot access '%s': No such file or directory\n", name);
         return;
     }
+    if(header){
+        printf("%s:\n", name);
+    }
+
     struct dirent* dir_file = readdir(directory);
     do{
+        
         print_file(dir_file, params);
         dir_file = readdir(directory);
     } while (dir_file != NULL);
     if(errno){
         fprintf(stderr, "Erno Set Error\n");
+        errno = 0;
+        return;
         // TODO readdir failed
     }
     
@@ -102,3 +117,18 @@ void print_file(struct dirent* file_to_print, unix_ls_arg* params){
     printf("%s  ", file_to_print->d_name);
 }
 
+// This is not my hashing function 
+//  Source: https://stackoverflow.com/questions/7666509/hash-function-for-string
+unsigned long string_hash(char* str){
+    unsigned long hash = 5281;
+    int c = *str;
+    while(c){
+        hash = ((hash << 5) + hash) + c;
+        c = *(++str);
+    }
+    return hash;
+}
+
+bool compare_string(char* str0, char* str1){
+    return strcmp(str0, str1) == 0;
+}
