@@ -13,7 +13,6 @@
 #include <time.h>
 
 #include "UnixLs.h"
-#include "set.h"
 #include "fifo.h"
 
 int main(int argc, char** argv){
@@ -52,7 +51,7 @@ int main(int argc, char** argv){
         // Dir_index is zero when no file input args
         print_file(".", &ls_args, false);
     } else { 
-        bool header = dir_index != 0 && argc - dir_index > 1;
+        bool header = ls_args.recursive || (dir_index != 0 && argc - dir_index > 1);
         // Loop through the input file args printing them
         for(int i=dir_index; i<argc; ++i){
             print_file(argv[i], &ls_args, header);
@@ -65,6 +64,14 @@ int main(int argc, char** argv){
 
 void print_file(char* name, unix_ls_arg* params, bool header){
     assert(name != NULL);
+    fifo* rec_fifo;
+    if(params->recursive){
+        rec_fifo = FIFO_create();
+        if(rec_fifo == NULL){
+            printf("out of mem line:%u\n", __LINE__);
+            exit(EXIT_FAILURE);
+        }
+    }
     DIR* directory = opendir(name);
     struct stat stat_buf;
     if(directory){
@@ -76,9 +83,18 @@ void print_file(char* name, unix_ls_arg* params, bool header){
         while (dir_file != NULL){   
             if(dir_file->d_name[0] != '.'){
                 print_dirent(name, dir_file, params);    
-            }
-            if(params->recursive && is_dir(dir_file->d_name)){
-
+                if(params->recursive && is_dir(dir_file->d_name, name)){
+                    int len_path = strlen(name);
+                    int size = len_path + strlen(dir_file->d_name) + 2;
+                    char* pItem = malloc(size);
+                    pItem[0] = '\0';
+                    strcat(pItem, name);
+                    if(name[len_path-1] != '/'){
+                        strcat(pItem, "/");
+                    }
+                    strcat(pItem, dir_file->d_name);
+                    FIFO_enqueue(rec_fifo, pItem);
+                }
             }
 
             dir_file = readdir(directory);
@@ -91,8 +107,15 @@ void print_file(char* name, unix_ls_arg* params, bool header){
         fprintf(stderr, "UnixLs: cannot access '%s': No such file or directory\n", name);
     }
     if(params->recursive){
-
+        char* pItem;
+        while((pItem = FIFO_dequeue(rec_fifo))){
+            printf("\n\n");
+            print_file(pItem, params, header);
+            free(pItem);
+        }
+        FIFO_free(rec_fifo);
     }
+    return;
 }
 
 void print_dirent(char* dirname, struct dirent* file_to_print, unix_ls_arg* params){
@@ -188,25 +211,14 @@ void get_mode_string(mode_t mode, char* string_buffer){
     string_buffer[10] = '\0';
 }
 
-unsigned long string_hash(char* str){
-    // This is not my hashing function 
-    //  Source: https://stackoverflow.com/questions/7666509/hash-function-for-string
-    unsigned long hash = 5281;
-    int c = *str;
-    while(c){
-        hash = ((hash << 5) + hash) + c;
-        c = *(++str);
-    }
-    return hash;
-}
-
-bool compare_string(char* str0, char* str1){
-    return strcmp(str0, str1) == 0;
-}
-
-bool is_dir(char* file_name){
-    struct stat file_stat;
-    if(stat(file_name, &file_stat)){
+bool is_dir(char* file_name, char* path_name){
+    struct stat file_stat;        
+    char str_buffer[PATH_MAX];
+    str_buffer[0] = '\0';
+    strcat(str_buffer, path_name);
+    strcat(str_buffer, "/");
+    strcat(str_buffer, file_name);
+    if(stat(str_buffer, &file_stat)){
         return 0;
     }
     return S_ISDIR(file_stat.st_mode);

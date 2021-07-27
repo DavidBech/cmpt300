@@ -43,6 +43,7 @@ void* FIFO_dequeue(fifo* pFifo){
         pFifo->front = pFifo->front->next;
         if(pFifo->back == prev_front){
             pFifo->back = NULL;
+            pFifo->front = NULL;
         }
         free(prev_front);
         --pFifo->size;

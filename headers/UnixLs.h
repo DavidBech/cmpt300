@@ -11,11 +11,6 @@ struct unix_ls_arg_s{
     bool recursive;
 };
 
-// Returns hash of string
-unsigned long string_hash(char* str);
-// Compares stirng
-bool compare_string(char* str0, char* str1);
-
 // Prints the given file
 //  if the name is a dir prints all files in the dir
 void print_file(char* file_name, unix_ls_arg* paramaters, bool header);
@@ -33,6 +28,6 @@ void get_date_string(struct timespec time_stamp, char* string_buffer);
 void get_mode_string(mode_t mode, char* string_buffer);
 
 // Returns true if given file is a dir
-bool is_dir(char* file_name);
+bool is_dir(char* file_name, char* path_name);
 
 #endif
