@@ -12,33 +12,9 @@
 #include <pwd.h>
 #include <time.h>
 
+#include "UnixLs.h"
 #include "set.h"
-
-typedef struct unix_ls_arg_s unix_ls_arg;
-struct unix_ls_arg_s{
-    bool inode;
-    bool long_list;
-    bool recursive;
-};
-
-// Returns hash of string
-unsigned long string_hash(char* str);
-
-// Compares stirng
-bool compare_string(char* str0, char* str1);
-
-// Called with a given file/directory to print as well as additional info about what print paramaters
-void print_dirent(char* dirname, struct dirent* file_to_print, unix_ls_arg* paramaters);
-
-// Called with a given file
-void print_stat(char* file_name, struct stat* file_to_print, unix_ls_arg* paramaters);
-
-// Call print_dirent on each file in the given dir name
-void print_file(char* name, unix_ls_arg* paramaters, bool header);
-
-void get_date_string(struct timespec time_stamp, char* string_buffer);
-
-void get_mode_string(mode_t mode, char* string_buffer);
+#include "fifo.h"
 
 int main(int argc, char** argv){
     unix_ls_arg ls_args;
@@ -101,6 +77,10 @@ void print_file(char* name, unix_ls_arg* params, bool header){
             if(dir_file->d_name[0] != '.'){
                 print_dirent(name, dir_file, params);    
             }
+            if(params->recursive && is_dir(dir_file->d_name)){
+
+            }
+
             dir_file = readdir(directory);
         }
         closedir(directory);
@@ -109,6 +89,9 @@ void print_file(char* name, unix_ls_arg* params, bool header){
         print_stat(name, &stat_buf, params);
     } else {
         fprintf(stderr, "UnixLs: cannot access '%s': No such file or directory\n", name);
+    }
+    if(params->recursive){
+
     }
 }
 
@@ -123,6 +106,7 @@ void print_dirent(char* dirname, struct dirent* file_to_print, unix_ls_arg* para
         //TODO lstat vs stat
         if(lstat(str_buffer, &stat_buffer)){
             perror("lstat Failed\n");
+            printf("%s\n", str_buffer);
             exit(EXIT_FAILURE);
         }
         print_stat(file_to_print->d_name, &stat_buffer, params);
@@ -218,4 +202,12 @@ unsigned long string_hash(char* str){
 
 bool compare_string(char* str0, char* str1){
     return strcmp(str0, str1) == 0;
+}
+
+bool is_dir(char* file_name){
+    struct stat file_stat;
+    if(stat(file_name, &file_stat)){
+        return 0;
+    }
+    return S_ISDIR(file_stat.st_mode);
 }

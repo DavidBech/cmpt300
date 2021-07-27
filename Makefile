@@ -23,19 +23,26 @@ clean:
 	rm -f $(SET_TEST)
 	rm -rf $(OBJ_DIR)
 
-# gcc Targets
+# ***** gcc Targets ***** 
+# Set Testing link target
 $(SET_TEST): dirs $(OBJ_DIR)/set.o $(OBJ_DIR)/set_testing_main.o
 	gcc $(local_LFLAGS) -o $(SET_TEST) $(OBJ_DIR)/set.o $(OBJ_DIR)/set_testing_main.o
 
-$(OBJ_DIR)/set_testing_main.o: $(SRC_DIR)/set_testing_main.c
-	gcc $(local_CFLAGS) -c $(SRC_DIR)/set_testing_main.c -o $(OBJ_DIR)/set_testing_main.o
+# default link target
+$(PROGNAME): $(OBJ_DIR)/UnixLs.o $(OBJ_DIR)/set.o $(OBJ_DIR)/fifo.o
+	gcc $(local_LFLAGS) -o $(PROGNAME) $(OBJ_DIR)/UnixLs.o $(OBJ_DIR)/set.o $(OBJ_DIR)/fifo.o
 
-$(PROGNAME): $(OBJ_DIR)/UnixLs.o $(OBJ_DIR)/set.o
-	gcc $(local_LFLAGS) -o $(PROGNAME) $(OBJ_DIR)/UnixLs.o $(OBJ_DIR)/set.o
-
+# Compile targets
 $(OBJ_DIR)/UnixLs.o: $(SRC_DIR)/UnixLs.c
 	gcc $(local_CFLAGS) -c $(SRC_DIR)/UnixLs.c -o $(OBJ_DIR)/UnixLs.o
 
 $(OBJ_DIR)/set.o: $(SRC_DIR)/set.c $(INC_DIR)/set.h
 	gcc $(local_CFLAGS) -c $(SRC_DIR)/set.c -o $(OBJ_DIR)/set.o
+
+$(OBJ_DIR)/fifo.o: $(SRC_DIR)/fifo.c $(INC_DIR)/fifo.h
+	gcc $(local_CFLAGS) -c $(SRC_DIR)/fifo.c -o $(OBJ_DIR)/fifo.o
+
+$(OBJ_DIR)/set_testing_main.o: $(SRC_DIR)/set_testing_main.c
+	gcc $(local_CFLAGS) -c $(SRC_DIR)/set_testing_main.c -o $(OBJ_DIR)/set_testing_main.o
+
 
