@@ -54,6 +54,9 @@ int main(int argc, char** argv){
         bool header = ls_args.recursive || (dir_index != 0 && argc - dir_index > 1);
         // Loop through the input file args printing them
         for(int i=dir_index; i<argc; ++i){
+            if(i != dir_index){
+                printf("\n\n");
+            }
             print_file(argv[i], &ls_args, header);
         }
     }
@@ -102,7 +105,15 @@ void print_file(char* name, unix_ls_arg* params, bool header){
         closedir(directory);
     } else if(!stat(name, &stat_buf)){
         // Input name is file
-        print_stat(name, &stat_buf, params);
+        print_stat(name, &stat_buf, params, NULL);
+    } else if(lstat(name, &stat_buf)){
+        // Input name is file
+        if(params->long_list){
+            // TODO readlink
+            print_stat(name, &stat_buf, params, NULL);
+        } else {
+            print_stat(name, &stat_buf, params, NULL);
+        }
     } else {
         fprintf(stderr, "UnixLs: cannot access '%s': No such file or directory\n", name);
     }
@@ -120,19 +131,26 @@ void print_file(char* name, unix_ls_arg* params, bool header){
 
 void print_dirent(char* dirname, struct dirent* file_to_print, unix_ls_arg* params){
     if(params->long_list){
+        // Call print_stat
         struct stat stat_buffer;
         char str_buffer[PATH_MAX];
         str_buffer[0] = '\0';
         strcat(str_buffer, dirname);
         strcat(str_buffer, "/");
         strcat(str_buffer, file_to_print->d_name);
-        //TODO lstat vs stat
-        if(lstat(str_buffer, &stat_buffer)){
-            perror("lstat Failed\n");
+        if(!stat(str_buffer, &stat_buffer)){
+            print_stat(file_to_print->d_name, &stat_buffer, params, NULL);    
+        } else if(!lstat(str_buffer, &stat_buffer)){
+            char str_buffer_link_name[PATH_MAX];
+            memset(str_buffer_link_name, '\0', PATH_MAX);
+            readlink(str_buffer, str_buffer_link_name, PATH_MAX);
+            print_stat(file_to_print->d_name, &stat_buffer, params, str_buffer_link_name);
+        } else {
+            // TODO -- just return?
+            perror("stat Failed\n");
             printf("%s\n", str_buffer);
             exit(EXIT_FAILURE);
         }
-        print_stat(file_to_print->d_name, &stat_buffer, params);
     } else if(params->inode){
         printf("%lu %s  ", file_to_print->d_ino, file_to_print->d_name);
     } else {
@@ -140,7 +158,7 @@ void print_dirent(char* dirname, struct dirent* file_to_print, unix_ls_arg* para
     }
 }
 
-void print_stat(char* file_name, struct stat* file_to_print, unix_ls_arg* params){
+void print_stat(char* file_name, struct stat* file_to_print, unix_ls_arg* params, char* symbolic_destination){
     if(params->long_list){
         // TODO column's widths
         if(params->inode){
@@ -153,7 +171,7 @@ void print_stat(char* file_name, struct stat* file_to_print, unix_ls_arg* params
         char mode_string_buffer[11];
         get_mode_string(file_to_print->st_mode, mode_string_buffer);
         // TODO column widths
-        printf("%s %4lu %s %s %5lu %s %s\n", 
+        printf("%s %4lu %s %s %5lu %s %s", 
             mode_string_buffer, //Col1
             file_to_print->st_nlink, // Col2
             pw->pw_name, // Col3
@@ -162,6 +180,11 @@ void print_stat(char* file_name, struct stat* file_to_print, unix_ls_arg* params
             date_string_buffer, // Col6
             file_name // Col7
             );
+        if(symbolic_destination){
+            printf(" -> %s\n", symbolic_destination);
+        }else{
+            printf("\n");
+        }
 
     } else if (params->inode){
         printf("%lu %s  ", file_to_print->st_ino, file_name);

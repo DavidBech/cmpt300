@@ -19,7 +19,7 @@ void print_file(char* file_name, unix_ls_arg* paramaters, bool header);
 void print_dirent(char* dir_name, struct dirent* file_to_print, unix_ls_arg* paramaters);
 
 // Prints the input stat
-void print_stat(char* file_name, struct stat* file_to_print, unix_ls_arg* paramaters);
+void print_stat(char* file_name, struct stat* file_to_print, unix_ls_arg* paramaters, char* symbolic_destination);
 
 // Returns date string in the string buffer for long list printout
 void get_date_string(struct timespec time_stamp, char* string_buffer);
