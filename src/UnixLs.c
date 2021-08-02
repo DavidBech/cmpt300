@@ -15,9 +15,38 @@
 #include "UnixLs.h"
 #include "fifo.h"
 
+static fifo* long_output_fifo;
+static struct output_col_widths_s{
+    unsigned inode_width;
+    unsigned num_links_width;
+    unsigned file_size_width;
+    unsigned group_width;
+    unsigned owner_width;
+} out_col_widths;
+
+static struct unix_ls_arg_s{
+    bool inode;
+    bool long_list;
+    bool recursive;
+} params;
+
+struct long_output_item_s{
+    long unsigned inode_num;
+    long unsigned file_size;
+    long unsigned num_links;
+    char* owner_string;
+    char* group_string;
+    char* file_name_string;
+    char* symbolic_dest_string;
+    char mode_string[11];
+    char date_string[18];
+};
+
+static void free_long_output_item(struct long_output_item_s* pItem);
+static void print_long_output_fifo();
+
 int main(int argc, char** argv){
-    unix_ls_arg ls_args;
-    memset(&ls_args, '\0', sizeof(ls_args));
+    memset(&params, '\0', sizeof(params));
     int dir_index = 0;
 
     // Set the input arguments parameters
@@ -26,13 +55,13 @@ int main(int argc, char** argv){
             for(int j=1; j<strlen(argv[i]); ++j){
                 switch(argv[i][j]){
                     case('i'):
-                        ls_args.inode = true;
+                        params.inode = true;
                         break;
                     case('l'):
-                        ls_args.long_list = true;
+                        params.long_list = true;
                         break;
                     case('R'):
-                        ls_args.recursive = true;
+                        params.recursive = true;
                         break;
                     default:
                         fprintf(stderr, "UnixLs invalid option -- '%c'", argv[i][j]);
@@ -49,147 +78,173 @@ int main(int argc, char** argv){
     // Print out info
     if(dir_index == 0){
         // Dir_index is zero when no file input args
-        print_file(".", &ls_args, false);
+        print_file(".", false);
     } else { 
-        bool header = ls_args.recursive || (dir_index != 0 && argc - dir_index > 1);
+        bool header = params.recursive || (dir_index != 0 && argc - dir_index > 1);
         // Loop through the input file args printing them
         for(int i=dir_index; i<argc; ++i){
             if(i != dir_index){
                 printf("\n\n");
             }
-            print_file(argv[i], &ls_args, header);
+            print_file(argv[i], header);
         }
     }
-
-    printf("\n");
     return EXIT_SUCCESS;
 }
 
-void print_file(char* name, unix_ls_arg* params, bool header){
-    assert(name != NULL);
+void print_file(char* file_name, bool header){
+    assert(file_name != NULL);
     fifo* rec_fifo;
-    if(params->recursive){
+    if(params.recursive){
         rec_fifo = FIFO_create();
         if(rec_fifo == NULL){
-            printf("out of mem line:%u\n", __LINE__);
+            fprintf(stderr, "Out of mem\n");
             exit(EXIT_FAILURE);
         }
     }
-    DIR* directory = opendir(name);
+    DIR* directory = opendir(file_name);
     struct stat stat_buf;
     if(directory){
         // Input name is directory
         if(header){
-            printf("%s:\n", name);
+            printf("%s:\n", file_name);
         }
         struct dirent* dir_file = readdir(directory);
-        while (dir_file != NULL){   
+        while (dir_file != NULL){
             if(dir_file->d_name[0] != '.'){
-                print_dirent(name, dir_file, params);    
-                if(params->recursive && is_dir(dir_file->d_name, name)){
-                    int len_path = strlen(name);
-                    int size = len_path + strlen(dir_file->d_name) + 2;
-                    char* pItem = malloc(size);
-                    pItem[0] = '\0';
-                    strcat(pItem, name);
-                    if(name[len_path-1] != '/'){
-                        strcat(pItem, "/");
-                    }
-                    strcat(pItem, dir_file->d_name);
-                    FIFO_enqueue(rec_fifo, pItem);
+                // Print the file
+                print_dirent(file_name, dir_file);    
+
+                // If recursion is enabled and the current file is a directory
+                //  add to FIFO of dirs to recursivley call this method on
+                if(params.recursive && is_dir(dir_file->d_name, file_name)){
+                    char* full_path = append_file_to_dir(file_name, dir_file->d_name);
+                    FIFO_enqueue(rec_fifo, full_path);
                 }
             }
-
+            // Get the next file to print
             dir_file = readdir(directory);
         }
         closedir(directory);
-    } else if(!stat(name, &stat_buf)){
-        // Input name is file
-        print_stat(name, &stat_buf, params, NULL);
-    } else if(lstat(name, &stat_buf)){
-        // Input name is file
-        if(params->long_list){
-            // TODO readlink
-            print_stat(name, &stat_buf, params, NULL);
+    } else if(!stat(file_name, &stat_buf)){
+        // Input file_name is file
+        print_stat(file_name, &stat_buf, NULL);
+    } else if(!lstat(file_name, &stat_buf)){
+        // Input file_name is symbolic link
+        if(params.long_list){
+            char link_name_buffer[PATH_MAX];
+            readlink(file_name, link_name_buffer, PATH_MAX);
+            print_stat(file_name, &stat_buf, link_name_buffer);
         } else {
-            print_stat(name, &stat_buf, params, NULL);
+            print_stat(file_name, &stat_buf, NULL);
         }
     } else {
-        fprintf(stderr, "UnixLs: cannot access '%s': No such file or directory\n", name);
+        fprintf(stderr, "UnixLs: cannot access '%s': No such file or directory\n", file_name);
     }
-    if(params->recursive){
-        char* pItem;
-        while((pItem = FIFO_dequeue(rec_fifo))){
-            printf("\n\n");
-            print_file(pItem, params, header);
-            free(pItem);
+    if(long_output_fifo){
+        print_long_output_fifo();
+    }
+    if(params.recursive){
+        char* file_to_print;
+        while((file_to_print = FIFO_dequeue(rec_fifo))){
+            printf("\n");
+            print_file(file_to_print, header);
+            free(file_to_print);
         }
         FIFO_free(rec_fifo);
     }
     return;
 }
 
-void print_dirent(char* dirname, struct dirent* file_to_print, unix_ls_arg* params){
-    if(params->long_list){
+void print_dirent(char* dirname, struct dirent* file_to_print){
+    if(params.long_list){
         // Call print_stat
+        char* file_with_path = append_file_to_dir(dirname, file_to_print->d_name);
         struct stat stat_buffer;
-        char str_buffer[PATH_MAX];
-        str_buffer[0] = '\0';
-        strcat(str_buffer, dirname);
-        strcat(str_buffer, "/");
-        strcat(str_buffer, file_to_print->d_name);
-        if(!stat(str_buffer, &stat_buffer)){
-            print_stat(file_to_print->d_name, &stat_buffer, params, NULL);    
-        } else if(!lstat(str_buffer, &stat_buffer)){
+        if(!stat(file_with_path, &stat_buffer)){
+            print_stat(file_to_print->d_name, &stat_buffer, NULL);    
+        } else if(!lstat(file_with_path, &stat_buffer)){
             char str_buffer_link_name[PATH_MAX];
-            memset(str_buffer_link_name, '\0', PATH_MAX);
-            readlink(str_buffer, str_buffer_link_name, PATH_MAX);
-            print_stat(file_to_print->d_name, &stat_buffer, params, str_buffer_link_name);
+            memset(&str_buffer_link_name, '\0', PATH_MAX);
+            readlink(file_with_path, str_buffer_link_name, PATH_MAX);
+            print_stat(file_to_print->d_name, &stat_buffer, str_buffer_link_name);
         } else {
-            // TODO -- just return?
-            perror("stat Failed\n");
-            printf("%s\n", str_buffer);
-            exit(EXIT_FAILURE);
+            fprintf(stderr, "UnixLs: cannot access '%s': No such file or directory\n", file_with_path);
         }
-    } else if(params->inode){
-        printf("%lu %s  ", file_to_print->d_ino, file_to_print->d_name);
+        free(file_with_path);
+    } else if(params.inode){
+        printf("%lu %s\n", file_to_print->d_ino, file_to_print->d_name);
     } else {
-        printf("%s  ", file_to_print->d_name);
+        printf("%s\n", file_to_print->d_name);
     }
 }
 
-void print_stat(char* file_name, struct stat* file_to_print, unix_ls_arg* params, char* symbolic_destination){
-    if(params->long_list){
-        // TODO column's widths
-        if(params->inode){
-            printf("%lu ", file_to_print->st_ino);
+void print_stat(char* file_name, struct stat* file_to_print, char* symbolic_destination){
+    if(params.long_list){
+        if(!long_output_fifo){
+            long_output_fifo = FIFO_create();
+            memset(&out_col_widths, '\0', sizeof(out_col_widths));
         }
+        unsigned len;
+        char buffer[32];
+        memset(&buffer, '\0', 32);
         struct group* grp = getgrgid(file_to_print->st_gid);
         struct passwd* pw = getpwuid(file_to_print->st_uid);
-        char date_string_buffer[18];
-        get_date_string(file_to_print->st_mtim, date_string_buffer);
-        char mode_string_buffer[11];
-        get_mode_string(file_to_print->st_mode, mode_string_buffer);
-        // TODO column widths
-        printf("%s %4lu %s %s %5lu %s %s", 
-            mode_string_buffer, //Col1
-            file_to_print->st_nlink, // Col2
-            pw->pw_name, // Col3
-            grp->gr_name, // Col4
-            file_to_print->st_size, // Col5
-            date_string_buffer, // Col6
-            file_name // Col7
-            );
-        if(symbolic_destination){
-            printf(" -> %s\n", symbolic_destination);
-        }else{
-            printf("\n");
+        struct long_output_item_s* pItem = malloc(sizeof(struct long_output_item_s));
+        // Inode Number
+        pItem->inode_num = file_to_print->st_ino;
+        sprintf(buffer, "%lu", pItem->inode_num);
+        len = strlen(buffer);
+        if(len > out_col_widths.inode_width){
+            out_col_widths.inode_width = len;
+        }
+        // File Size
+        pItem->file_size = file_to_print->st_size;
+        sprintf(buffer, "%lu", pItem->file_size);
+        len = strlen(buffer);
+        if(len > out_col_widths.file_size_width){
+            out_col_widths.file_size_width = len;
         }
 
-    } else if (params->inode){
-        printf("%lu %s  ", file_to_print->st_ino, file_name);
+        // Number Links
+        pItem->num_links = file_to_print->st_nlink;
+        sprintf(buffer, "%lu", pItem->num_links);
+        len = strlen(buffer);
+        if(len > out_col_widths.num_links_width){
+            out_col_widths.num_links_width = len;
+        }
+
+        // Group Name
+        len = strlen(grp->gr_name);
+        if(len > out_col_widths.group_width){
+            out_col_widths.group_width = len;
+        }
+        pItem->group_string = malloc(len + 1);
+        strcpy(pItem->group_string, grp->gr_name);
+        // Owner Name
+        len = strlen(pw->pw_name);
+        if(len > out_col_widths.owner_width){
+            out_col_widths.owner_width = len;
+        }
+        pItem->owner_string = malloc(len + 1);
+        strcpy(pItem->owner_string, pw->pw_name);
+        // File Name
+        pItem->file_name_string = malloc(strlen(file_name) + 1);
+        strcpy(pItem->file_name_string, file_name);
+        // Symbolic Link
+        if(symbolic_destination){
+            pItem->symbolic_dest_string = malloc(strlen(symbolic_destination) + 1);
+            strcpy(pItem->symbolic_dest_string, symbolic_destination);
+        } else {
+            pItem->symbolic_dest_string = NULL;
+        }
+        get_date_string(file_to_print->st_mtim, pItem->date_string);
+        get_mode_string(file_to_print->st_mode, pItem->mode_string, symbolic_destination != NULL);
+        FIFO_enqueue(long_output_fifo, pItem);
+    } else if (params.inode){
+        printf("%lu %s\n", file_to_print->st_ino, file_name);
     } else {
-        printf("%s  ", file_name);
+        printf("%s\n", file_name);
     }
 }
 
@@ -216,9 +271,9 @@ void get_date_string(struct timespec time_stamp, char* string_buffer){
     string_buffer[17] = '\0';
 }
 
-void get_mode_string(mode_t mode, char* string_buffer){
+void get_mode_string(mode_t mode, char* string_buffer, bool is_link){
     // dir/file
-    string_buffer[0] = S_ISDIR(mode) ? 'd' : '-';
+    string_buffer[0] = is_link ? 'l' : S_ISDIR(mode) ? 'd' : '-';
     // Owner
     string_buffer[1] = mode & S_IRUSR ? 'r' : '-'; 
     string_buffer[2] = mode & S_IWUSR ? 'w' : '-'; 
@@ -245,4 +300,56 @@ bool is_dir(char* file_name, char* path_name){
         return 0;
     }
     return S_ISDIR(file_stat.st_mode);
+}
+
+char* append_file_to_dir(char* dir_name, char* file_name){
+    char* full_path;
+    int len_dir = strlen(dir_name);
+    int len_file = strlen(file_name);
+    // one char for '\0' one char for '/'
+    int size = len_dir + len_file + 2;
+
+    full_path = malloc(size);
+    full_path[0] = '\0';
+    strcat(full_path, dir_name);
+
+    if(dir_name[len_dir-1] != '/'){
+        strcat(full_path, "/");
+    }
+    strcat(full_path, file_name);
+    return full_path;   
+}
+
+static void free_long_output_item(struct long_output_item_s* pItem){
+    free(pItem->owner_string);
+    free(pItem->group_string);
+    free(pItem->file_name_string);
+    free(pItem->symbolic_dest_string);
+    free(pItem);
+}
+
+static void print_long_output_fifo(){
+    struct long_output_item_s* pItem;
+    while((pItem = FIFO_dequeue(long_output_fifo))){
+       if(params.inode){
+            printf("%*lu ", out_col_widths.inode_width, pItem->inode_num); //Col0
+        }
+        printf("%s %*lu %*s %*s %*lu %s %s", 
+            pItem->mode_string, //Col1
+            out_col_widths.num_links_width, pItem->num_links, // Col2
+            out_col_widths.owner_width, pItem->owner_string, // Col3
+            out_col_widths.group_width, pItem->group_string, // Col4
+            out_col_widths.file_size_width, pItem->file_size, // Col5
+            pItem->date_string, // Col6
+            pItem->file_name_string // Col7
+            );
+        if(pItem->symbolic_dest_string != NULL){
+            printf(" -> %s\n", pItem->symbolic_dest_string);
+        }else{
+            printf("\n");
+        }
+        free_long_output_item(pItem);
+    }
+    FIFO_free(long_output_fifo);
+    long_output_fifo = NULL;
 }

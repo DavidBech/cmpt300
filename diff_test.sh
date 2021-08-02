@@ -1,12 +1,17 @@
 #!/bin/bash
-if [[ -e UnixLs ]]
-then
-    ./UnixLs "$@"
-    ls -U "$@"
-    echo "Diff Output"
-    diff <(./UnixLs "$@") <(ls -Ux "$@")
-else 
-    echo "Build Project\n"
+make > /dev/null
+if [[ ! (-e UnixLs) ]]
+then 
+    echo "Error running Make"
+    exit 1
+fi
+
+diff <(./UnixLs "$@") <(ls --time-style="+%b %e %Y %H:%m" -U1 "$@")
+if [[ "$?" -eq 0 ]] 
+then 
+    echo "Success"
+else
+    echo "Failed"
 fi
 
 

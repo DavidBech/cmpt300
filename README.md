@@ -6,11 +6,17 @@ All Code Written By David Bechert
 
 `./UnixLs [OPTION] ... [FILES] ...`
 
+## Options
+
+- `-i` display the inode number prior to the file name
+- `-l` display long listing info about the file
+- `-R` recursivly list directory entries
+
 ## Assignment Details
 
 - Implematation of `ls` command
-  - Supports -R (Recursion), -i (iNode Value), and -l (long listing)
   - All CLI options must be placed prior to files
+  - File outputs assume `-U1` options of standard `ls` command
 
 ## Makefile Targets
 
