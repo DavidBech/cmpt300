@@ -64,7 +64,7 @@ int main(int argc, char** argv){
                         params.recursive = true;
                         break;
                     default:
-                        fprintf(stderr, "UnixLs invalid option -- '%c'", argv[i][j]);
+                        fprintf(stderr, "UnixLs invalid option -- '%c'\n", argv[i][j]);
                         return EXIT_FAILURE;
                 }
             }
@@ -76,11 +76,11 @@ int main(int argc, char** argv){
     }
 
     // Print out info
+    bool header = params.recursive || (dir_index != 0 && argc - dir_index > 1);
     if(dir_index == 0){
         // Dir_index is zero when no file input args
-        print_file(".", false);
+        print_file(".", header);
     } else { 
-        bool header = params.recursive || (dir_index != 0 && argc - dir_index > 1);
         // Loop through the input file args printing them
         for(int i=dir_index; i<argc; ++i){
             if(i != dir_index){
@@ -161,13 +161,15 @@ void print_dirent(char* dirname, struct dirent* file_to_print){
         // Call print_stat
         char* file_with_path = append_file_to_dir(dirname, file_to_print->d_name);
         struct stat stat_buffer;
-        if(!stat(file_with_path, &stat_buffer)){
-            print_stat(file_to_print->d_name, &stat_buffer, NULL);    
-        } else if(!lstat(file_with_path, &stat_buffer)){
+        if(!stat(file_with_path, &stat_buffer) || !lstat(file_with_path, &stat_buffer)){
             char str_buffer_link_name[PATH_MAX];
             memset(&str_buffer_link_name, '\0', PATH_MAX);
             readlink(file_with_path, str_buffer_link_name, PATH_MAX);
-            print_stat(file_to_print->d_name, &stat_buffer, str_buffer_link_name);
+            if(strcmp(str_buffer_link_name, "")){
+                print_stat(file_to_print->d_name, &stat_buffer, str_buffer_link_name);
+            } else {
+                print_stat(file_to_print->d_name, &stat_buffer, NULL);
+            }
         } else {
             fprintf(stderr, "UnixLs: cannot access '%s': No such file or directory\n", file_with_path);
         }
